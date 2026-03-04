@@ -1,101 +1,69 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import "./App.css";
-
-type Product = {
-  id: string;
-  name: string;
-  price: number;
-  priceMode?: "fixed" | "custom";
-};
-
-type Category = {
-  id: string;
-  name: string;
-  items: Product[];
-};
-
-type PriceData = {
-  categories: Category[];
-};
-
-type CalculationLine = {
-  categoryName: string;
-  productName: string;
-  quantity: number;
-  unitPrice: number;
-  lineTotal: number;
-};
-
-type SavedCalculation = {
-  id: string;
-  createdAt: string;
-  lines: CalculationLine[];
-  total: number;
-};
-
-type Screen = "home" | "calc" | "archive" | "add";
-
-type DraftProduct = {
-  id: string;
-  name: string;
-  price: string;
-  priceMode: "fixed" | "custom";
-};
+import { AddCategoryScreen } from "./components/AddCategoryScreen";
+import { ArchiveScreen } from "./components/ArchiveScreen";
+import { CalcScreen } from "./components/CalcScreen";
+import { HomeScreen } from "./components/HomeScreen";
+import type {
+  Category,
+  CalculationLine,
+  DraftProduct,
+  PriceData,
+  Product,
+  SavedCalculation,
+  Screen,
+} from "./types";
+import {
+  buildIdFromDate,
+  buildItemKey,
+  createDraftProduct,
+  keepDigits,
+  readArrayFromStorage,
+  writeToStorage,
+} from "./utils";
 
 const PRICE_FILE = "/price.json";
 const DATA_FILE = "/data.json";
 const CALCULATIONS_KEY = "balloon_calc_calculations";
 const EXTRA_CATEGORIES_KEY = "balloon_calc_extra_categories";
 
-function formatMoney(value: number): string {
-  return `${value.toLocaleString("ru-RU")} грн`;
-}
-
-function pad(value: number): string {
-  return String(value).padStart(2, "0");
-}
-
-function buildIdFromDate(date: Date): string {
-  const day = pad(date.getDate());
-  const month = pad(date.getMonth() + 1);
-  const year = String(date.getFullYear()).slice(-2);
-  const hours = pad(date.getHours());
-  const minutes = pad(date.getMinutes());
-  return `${day}${month}${year}-${hours}${minutes}`;
-}
-
-function createDraftProduct(): DraftProduct {
-  return { id: crypto.randomUUID(), name: "", price: "", priceMode: "fixed" };
-}
-
 function App() {
+  // Основные данные приложения
   const [screen, setScreen] = useState<Screen>("home");
   const [priceData, setPriceData] = useState<PriceData>({ categories: [] });
   const [extraCategories, setExtraCategories] = useState<Category[]>([]);
   const [savedCalculations, setSavedCalculations] = useState<SavedCalculation[]>([]);
+
+  // UI-состояния архив/категории
   const [expandedArchiveId, setExpandedArchiveId] = useState<string | null>(null);
   const [openCategoryId, setOpenCategoryId] = useState<string | null>(null);
+
+  // Состояния расчета
   const [quantities, setQuantities] = useState<Record<string, number>>({});
   const [customAmounts, setCustomAmounts] = useState<Record<string, string>>({});
   const [lines, setLines] = useState<CalculationLine[]>([]);
   const [total, setTotal] = useState<number>(0);
+
+  // Служебные сообщения и формы
   const [saveMessage, setSaveMessage] = useState<string>("");
   const [copyMessage, setCopyMessage] = useState<string>("");
+  const [formMessage, setFormMessage] = useState<string>("");
+
+  // Форма добавления категории
   const [newCategoryName, setNewCategoryName] = useState<string>("");
   const [draftProducts, setDraftProducts] = useState<DraftProduct[]>([createDraftProduct()]);
-  const [formMessage, setFormMessage] = useState<string>("");
+
+  // Якорь к карточке результата
   const [scrollToResultOnCalcOpen, setScrollToResultOnCalcOpen] = useState<boolean>(false);
   const resultCardRef = useRef<HTMLElement | null>(null);
 
+  // Загрузка базового прайса и data.json
   useEffect(() => {
     let canceled = false;
 
-    async function loadData(): Promise<void> {
+    async function loadInitialFiles(): Promise<void> {
       try {
-        const [priceResp, archiveResp] = await Promise.all([
-          fetch(PRICE_FILE),
-          fetch(DATA_FILE),
-        ]);
+        const [priceResp, archiveResp] = await Promise.all([fetch(PRICE_FILE), fetch(DATA_FILE)]);
 
         if (!priceResp.ok) {
           throw new Error("Не удалось загрузить price.json");
@@ -119,67 +87,47 @@ function App() {
       }
     }
 
-    loadData();
+    loadInitialFiles();
 
     return () => {
       canceled = true;
     };
   }, []);
 
+  // Локальные данные пользователя (архив и добавленные категории)
   useEffect(() => {
-    const rawArchive = localStorage.getItem(CALCULATIONS_KEY);
-    const rawExtra = localStorage.getItem(EXTRA_CATEGORIES_KEY);
+    const localArchive = readArrayFromStorage<SavedCalculation>(CALCULATIONS_KEY);
+    const localExtraCategories = readArrayFromStorage<Category>(EXTRA_CATEGORIES_KEY);
 
-    if (rawArchive) {
-      try {
-        const parsedArchive = JSON.parse(rawArchive) as SavedCalculation[];
-        if (Array.isArray(parsedArchive)) {
-          setSavedCalculations(parsedArchive);
-        }
-      } catch {
-        // keep defaults
-      }
+    if (localArchive.length > 0) {
+      setSavedCalculations(localArchive);
     }
-
-    if (rawExtra) {
-      try {
-        const parsedExtra = JSON.parse(rawExtra) as Category[];
-        if (Array.isArray(parsedExtra)) {
-          setExtraCategories(parsedExtra);
-        }
-      } catch {
-        // keep defaults
-      }
+    if (localExtraCategories.length > 0) {
+      setExtraCategories(localExtraCategories);
     }
   }, []);
 
+  // Плавная прокрутка к результату после расчета/редактирования
   useEffect(() => {
-    if (!scrollToResultOnCalcOpen) {
-      return;
-    }
-    if (screen !== "calc") {
-      return;
-    }
-    if (lines.length === 0) {
+    if (!scrollToResultOnCalcOpen || screen !== "calc" || lines.length === 0) {
       return;
     }
 
     const timer = window.setTimeout(() => {
-      resultCardRef.current?.scrollIntoView({
-        behavior: "smooth",
-        block: "start",
-      });
+      resultCardRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
       setScrollToResultOnCalcOpen(false);
     }, 80);
 
     return () => window.clearTimeout(timer);
   }, [lines.length, screen, scrollToResultOnCalcOpen]);
 
+  // Единый список категорий: базовые + пользовательские
   const categories = useMemo(
     () => [...priceData.categories, ...extraCategories],
-    [extraCategories, priceData.categories],
+    [priceData.categories, extraCategories],
   );
 
+  // Архив отсортированный от новых к старым
   const sortedArchive = useMemo(
     () =>
       [...savedCalculations].sort(
@@ -188,6 +136,20 @@ function App() {
     [savedCalculations],
   );
 
+  // Индекс товаров по названию для быстрого восстановления расчета из архива
+  const productIndexByName = useMemo(() => {
+    const index = new Map<string, { categoryId: string; product: Product }>();
+    categories.forEach((category) => {
+      category.items.forEach((product) => {
+        if (!index.has(product.name)) {
+          index.set(product.name, { categoryId: category.id, product });
+        }
+      });
+    });
+    return index;
+  }, [categories]);
+
+  // Текст карточки результата для копирования
   const linesForCopy = useMemo(() => {
     if (lines.length === 0) {
       return "";
@@ -200,12 +162,9 @@ function App() {
     return `${rows.join("\n")}\nВсего: ${total} грн`;
   }, [lines, total]);
 
-  function itemKey(categoryId: string, productId: string): string {
-    return `${categoryId}::${productId}`;
-  }
-
+  // Обновляет количество товара и чистит custom-сумму при qty <= 0
   function setQuantity(categoryId: string, productId: string, nextValue: number): void {
-    const key = itemKey(categoryId, productId);
+    const key = buildItemKey(categoryId, productId);
     const normalized = Number.isFinite(nextValue) ? Math.max(0, Math.floor(nextValue)) : 0;
 
     setQuantities((prev) => {
@@ -230,8 +189,9 @@ function App() {
     }
   }
 
+  // Активирует товар по нажатию "+"
   function activateItem(categoryId: string, product: Product): void {
-    const key = itemKey(categoryId, product.id);
+    const key = buildItemKey(categoryId, product.id);
     setQuantity(categoryId, product.id, 1);
 
     if (product.priceMode === "custom") {
@@ -244,16 +204,17 @@ function App() {
     }
   }
 
+  // Строит массив строк результата и общую сумму
   function buildCalculation(): { lines: CalculationLine[]; total: number } {
     const nextLines: CalculationLine[] = [];
     let nextTotal = 0;
 
-    categories.forEach((category) => {
-      category.items.forEach((product) => {
-        const key = itemKey(category.id, product.id);
+    for (const category of categories) {
+      for (const product of category.items) {
+        const key = buildItemKey(category.id, product.id);
         const qty = quantities[key] ?? 0;
         if (qty <= 0) {
-          return;
+          continue;
         }
 
         const isCustom = product.priceMode === "custom";
@@ -262,11 +223,12 @@ function App() {
         const unitPrice = isCustom ? customPrice : product.price;
 
         if (unitPrice <= 0) {
-          return;
+          continue;
         }
 
         const lineTotal = normalizedQty * unitPrice;
         nextTotal += lineTotal;
+
         nextLines.push({
           categoryName: category.name,
           productName: product.name,
@@ -274,19 +236,23 @@ function App() {
           unitPrice,
           lineTotal,
         });
-      });
-    });
+      }
+    }
 
     return { lines: nextLines, total: nextTotal };
   }
 
+  // Запускает расчет и показывает карточку результата
   function handleCalculate(): void {
     const result = buildCalculation();
     setLines(result.lines);
     setTotal(result.total);
     setSaveMessage("");
+    setCopyMessage("");
+    setScrollToResultOnCalcOpen(result.lines.length > 0);
   }
 
+  // Сохраняет текущий результат в архив
   function handleSaveCalculation(): void {
     if (lines.length === 0) {
       setSaveMessage("Сначала нажмите «Рассчитать».");
@@ -303,44 +269,45 @@ function App() {
 
     setSavedCalculations((prev) => {
       const next = [record, ...prev];
-      localStorage.setItem(CALCULATIONS_KEY, JSON.stringify(next));
+      writeToStorage(CALCULATIONS_KEY, next);
       return next;
     });
+
     setSaveMessage(`Сохранено в архив: ${record.id}`);
   }
 
+  // Удаляет расчет из архива по id
   function handleDeleteCalculation(id: string): void {
     setSavedCalculations((prev) => {
       const next = prev.filter((item) => item.id !== id);
-      localStorage.setItem(CALCULATIONS_KEY, JSON.stringify(next));
+      writeToStorage(CALCULATIONS_KEY, next);
       return next;
     });
+
     setExpandedArchiveId((prev) => (prev === id ? null : prev));
   }
 
+  // Загружает сохраненный расчет обратно в экран "Категории"
   function handleEditCalculation(record: SavedCalculation): void {
     const nextQuantities: Record<string, number> = {};
     const nextCustomAmounts: Record<string, string> = {};
     let matched = 0;
 
-    record.lines.forEach((line) => {
-      for (const category of categories) {
-        const product = category.items.find((item) => item.name === line.productName);
-        if (!product) {
-          continue;
-        }
-
-        const key = itemKey(category.id, product.id);
-        if (product.priceMode === "custom") {
-          nextQuantities[key] = 1;
-          nextCustomAmounts[key] = String(line.unitPrice);
-        } else {
-          nextQuantities[key] = line.quantity;
-        }
-        matched += 1;
-        break;
+    for (const line of record.lines) {
+      const found = productIndexByName.get(line.productName);
+      if (!found) {
+        continue;
       }
-    });
+
+      const key = buildItemKey(found.categoryId, found.product.id);
+      if (found.product.priceMode === "custom") {
+        nextQuantities[key] = 1;
+        nextCustomAmounts[key] = String(line.unitPrice);
+      } else {
+        nextQuantities[key] = line.quantity;
+      }
+      matched += 1;
+    }
 
     setQuantities(nextQuantities);
     setCustomAmounts(nextCustomAmounts);
@@ -356,11 +323,13 @@ function App() {
     }
   }
 
+  // Копирует текущую карточку результата в буфер обмена
   async function handleCopy(): Promise<void> {
     if (!linesForCopy) {
       setCopyMessage("Пока нечего копировать.");
       return;
     }
+
     try {
       await navigator.clipboard.writeText(linesForCopy);
       setCopyMessage("Скопировано в буфер.");
@@ -369,6 +338,7 @@ function App() {
     }
   }
 
+  // Сбрасывает текущий расчет
   function resetCalc(): void {
     setQuantities({});
     setCustomAmounts({});
@@ -379,8 +349,10 @@ function App() {
     setOpenCategoryId(null);
   }
 
+  // Сохраняет новую пользовательскую категорию
   function saveCategory(): void {
     const categoryName = newCategoryName.trim();
+
     if (!categoryName) {
       setFormMessage("Введите название категории.");
       return;
@@ -397,11 +369,9 @@ function App() {
         if (item.name.length === 0) {
           return false;
         }
-
         if (item.priceMode === "custom") {
           return true;
         }
-
         return Number.isFinite(item.price) && item.price > 0;
       });
 
@@ -424,7 +394,7 @@ function App() {
 
     setExtraCategories((prev) => {
       const next = [...prev, newCategory];
-      localStorage.setItem(EXTRA_CATEGORIES_KEY, JSON.stringify(next));
+      writeToStorage(EXTRA_CATEGORIES_KEY, next);
       return next;
     });
 
@@ -433,27 +403,26 @@ function App() {
     setFormMessage("Категория добавлена.");
   }
 
+  // Удаляет пользовательскую категорию и связанные выбранные значения
   function deleteExtraCategory(categoryId: string): void {
     setExtraCategories((prev) => {
       const next = prev.filter((category) => category.id !== categoryId);
-      localStorage.setItem(EXTRA_CATEGORIES_KEY, JSON.stringify(next));
+      writeToStorage(EXTRA_CATEGORIES_KEY, next);
       return next;
     });
 
     setQuantities((prev) =>
-      Object.fromEntries(
-        Object.entries(prev).filter(([key]) => !key.startsWith(`${categoryId}::`)),
-      ),
+      Object.fromEntries(Object.entries(prev).filter(([key]) => !key.startsWith(`${categoryId}::`))),
     );
     setCustomAmounts((prev) =>
-      Object.fromEntries(
-        Object.entries(prev).filter(([key]) => !key.startsWith(`${categoryId}::`)),
-      ),
+      Object.fromEntries(Object.entries(prev).filter(([key]) => !key.startsWith(`${categoryId}::`))),
     );
+
     setOpenCategoryId((prev) => (prev === categoryId ? null : prev));
     setFormMessage("Категория удалена.");
   }
 
+  // Рендерит общий заголовок экрана с кнопкой "Назад"
   function renderHeader(title: string) {
     return (
       <header className="screen-header">
@@ -483,421 +452,56 @@ function App() {
   return (
     <div className="app-shell">
       <div className="app-card">
-        {screen === "home" && (
-          <section className="screen home">
-            <div className="hero-panel">
-              <p className="subtitle">Карманный PWA-калькулятор для расчета заказа шариков.</p>
-            </div>
-            <div className="menu-grid">
-              <button className="menu-card menu-card--lavender" onClick={() => setScreen("calc")}>
-                <div className="menu-card__head">
-                  <span className="menu-card__icon" aria-hidden="true">
-                    <svg viewBox="0 0 24 24" width="16" height="16">
-                      <path
-                        d="M5 4h14v16H5zM8 8h8M8 12h5M8 16h8"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="1.8"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                  </span>
-                  <div className="menu-card__text">
-                    <span className="menu-card__title">Рассчитать стоимость</span>
-                    <span className="menu-card__desc">Подсчет количества и общей суммы</span>
-                  </div>
-                </div>
-              </button>
-              <button className="menu-card menu-card--sand" onClick={() => setScreen("archive")}>
-                <div className="menu-card__head">
-                  <span className="menu-card__icon" aria-hidden="true">
-                    <svg viewBox="0 0 24 24" width="16" height="16">
-                      <path
-                        d="M4 7h16v13H4zM8 4h8M9 11h6M9 15h6"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="1.8"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                  </span>
-                  <div className="menu-card__text">
-                    <span className="menu-card__title">Архив</span>
-                    <span className="menu-card__desc">Сохраненные расчеты на устройстве</span>
-                  </div>
-                </div>
-              </button>
-              <button className="menu-card menu-card--mint" onClick={() => setScreen("add")}>
-                <div className="menu-card__head">
-                  <span className="menu-card__icon" aria-hidden="true">
-                    <svg viewBox="0 0 24 24" width="16" height="16">
-                      <path
-                        d="M12 5v14M5 12h14"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="1.9"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                  </span>
-                  <div className="menu-card__text">
-                    <span className="menu-card__title">Добавить наименование</span>
-                    <span className="menu-card__desc">Новая категория и товары</span>
-                  </div>
-                </div>
-              </button>
-            </div>
-            <p className="small-note">Сохранения хранятся локально на этом устройстве.</p>
-          </section>
-        )}
+        {screen === "home" && <HomeScreen setScreen={setScreen} />}
 
         {screen === "calc" && (
-          <section className="screen calc">
-            {renderHeader("Категории")}
-
-            <div className="category-list">
-              {categories.map((category) => {
-                const isOpen = openCategoryId === category.id;
-                return (
-                  <article
-                    key={category.id}
-                    className={`category-card ${isOpen ? "is-open" : ""}`}
-                  >
-                    <button
-                      className="category-btn"
-                      onClick={() => setOpenCategoryId(isOpen ? null : category.id)}
-                    >
-                      <span>{category.name}</span>
-                    </button>
-
-                    <div className={`products ${isOpen ? "is-open" : ""}`} aria-hidden={!isOpen}>
-                      {category.items.map((product) => {
-                        const key = itemKey(category.id, product.id);
-                        const qty = quantities[key] ?? 0;
-
-                        return (
-                          <div key={product.id} className="product-row">
-                            <div className="product-info">
-                              <strong>{product.name}</strong>
-                              <span>
-                                {product.priceMode === "custom"
-                                  ? "Введите сумму"
-                                  : formatMoney(product.price)}
-                              </span>
-                            </div>
-
-                            {qty <= 0 ? (
-                              <button
-                                className="qty-add"
-                                onClick={() => activateItem(category.id, product)}
-                              >
-                                +
-                              </button>
-                            ) : (
-                              <div className="qty-control">
-                                <button
-                                  className="qty-btn"
-                                  onClick={() => setQuantity(category.id, product.id, qty - 1)}
-                                >
-                                  −
-                                </button>
-
-                                {product.priceMode === "custom" ? (
-                                  <input
-                                    className="custom-amount-input"
-                                    inputMode="numeric"
-                                    placeholder="Сумма"
-                                    value={customAmounts[key] ?? ""}
-                                    onChange={(event) =>
-                                      setCustomAmounts((prev) => ({
-                                        ...prev,
-                                        [key]: event.target.value.replace(/[^\d]/g, ""),
-                                      }))
-                                    }
-                                  />
-                                ) : (
-                                  <>
-                                    <span className="qty-value">{qty}</span>
-                                    <button
-                                      className="qty-btn"
-                                      onClick={() => setQuantity(category.id, product.id, qty + 1)}
-                                    >
-                                      +
-                                    </button>
-                                  </>
-                                )}
-                              </div>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </article>
-                );
-              })}
-            </div>
-
-            <div className="calc-actions">
-              <button className="main-btn" onClick={handleCalculate}>
-                Рассчитать
-              </button>
-              <button className="ghost-btn" onClick={resetCalc}>
-                Сбросить
-              </button>
-            </div>
-
-            {lines.length > 0 && (
-              <article className="result-card" ref={resultCardRef}>
-                <div className="result-head">
-                  <h3>Результат</h3>
-                  <button
-                    className="copy-icon-btn"
-                    onClick={handleCopy}
-                    aria-label="Скопировать расчет"
-                    title="Скопировать"
-                  >
-                    <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
-                      <path
-                        d="M9 9h10v12H9zM5 3h10v2H7v10H5z"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="1.7"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                  </button>
-                </div>
-                <ul>
-                  {lines.map((line, index) => (
-                    <li key={`${line.productName}-${index}`}>
-                      <span>
-                        {line.productName} x {line.quantity}
-                      </span>
-                      <strong>{formatMoney(line.lineTotal)}</strong>
-                    </li>
-                  ))}
-                </ul>
-                <div className="total-row">
-                  <span>Всего</span>
-                  <strong>{formatMoney(total)}</strong>
-                </div>
-                <button className="main-btn save-btn" onClick={handleSaveCalculation}>
-                  Сохранить
-                </button>
-              </article>
-            )}
-
-            {saveMessage && <p className="status">{saveMessage}</p>}
-            {copyMessage && <p className="status">{copyMessage}</p>}
-          </section>
+          <CalcScreen
+            categories={categories}
+            openCategoryId={openCategoryId}
+            setOpenCategoryId={setOpenCategoryId}
+            quantities={quantities}
+            customAmounts={customAmounts}
+            buildItemKey={buildItemKey}
+            activateItem={activateItem}
+            setQuantity={setQuantity}
+            setCustomAmounts={setCustomAmounts}
+            keepDigits={keepDigits}
+            handleCalculate={handleCalculate}
+            resetCalc={resetCalc}
+            lines={lines}
+            total={total}
+            handleCopy={handleCopy}
+            handleSaveCalculation={handleSaveCalculation}
+            saveMessage={saveMessage}
+            copyMessage={copyMessage}
+            resultCardRef={resultCardRef}
+            renderHeader={renderHeader}
+          />
         )}
 
         {screen === "archive" && (
-          <section className="screen archive">
-            {renderHeader("Архив")}
-
-            {sortedArchive.length === 0 ? (
-              <p className="empty">Пока нет сохраненных расчетов.</p>
-            ) : (
-              <div className="archive-list">
-                {sortedArchive.map((record) => {
-                  const isExpanded = expandedArchiveId === record.id;
-                  return (
-                  <article
-                    key={record.id}
-                    className={`archive-card ${isExpanded ? "is-expanded" : ""}`}
-                    onClick={() =>
-                      setExpandedArchiveId((prev) => (prev === record.id ? null : record.id))
-                    }
-                  >
-                    <div className="archive-top">
-                      <div className="archive-meta">
-                        <strong>{new Date(record.createdAt).toLocaleString("ru-RU")}</strong>
-                        <span>{formatMoney(record.total)}</span>
-                      </div>
-                      <div className="archive-actions">
-                        <button
-                          className="icon-action-btn"
-                          aria-label="Редактировать расчет"
-                          title="Редактировать"
-                          onClick={(event) => {
-                            event.stopPropagation();
-                            handleEditCalculation(record);
-                          }}
-                        >
-                          <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true">
-                            <path
-                              d="M4 20h4l10-10-4-4L4 16v4zM13 7l4 4"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="1.8"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            />
-                          </svg>
-                        </button>
-                        <button
-                          className="icon-action-btn danger"
-                          aria-label="Удалить расчет"
-                          title="Удалить"
-                          onClick={(event) => {
-                            event.stopPropagation();
-                            handleDeleteCalculation(record.id);
-                          }}
-                        >
-                          <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true">
-                            <path
-                              d="M7 7l10 10M17 7L7 17"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="2"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            />
-                          </svg>
-                        </button>
-                      </div>
-                    </div>
-
-                    {isExpanded && (
-                      <>
-                        <ul>
-                          {record.lines.map((line, index) => (
-                            <li key={`${record.id}-${line.productName}-${index}`}>
-                              {line.productName} x {line.quantity} = {line.lineTotal} грн
-                            </li>
-                          ))}
-                        </ul>
-                        <div className="total-row">
-                          <span>Всего</span>
-                          <strong>{formatMoney(record.total)}</strong>
-                        </div>
-                      </>
-                    )}
-                  </article>
-                )})}
-              </div>
-            )}
-          </section>
+          <ArchiveScreen
+            sortedArchive={sortedArchive}
+            expandedArchiveId={expandedArchiveId}
+            setExpandedArchiveId={setExpandedArchiveId}
+            handleEditCalculation={handleEditCalculation}
+            handleDeleteCalculation={handleDeleteCalculation}
+            renderHeader={renderHeader}
+          />
         )}
 
         {screen === "add" && (
-          <section className="screen add">
-            {renderHeader("Добавить категорию")}
-
-            <label className="field">
-              <span>Название категории</span>
-              <input
-                value={newCategoryName}
-                onChange={(event) => setNewCategoryName(event.target.value)}
-                placeholder="Например: Фольга"
-              />
-            </label>
-
-            <div className="draft-products">
-              {draftProducts.map((item, index) => (
-                <div key={item.id} className="draft-row">
-                  <input
-                    className="draft-name"
-                    value={item.name}
-                    placeholder="Название товара"
-                    onChange={(event) =>
-                      setDraftProducts((prev) =>
-                        prev.map((current) =>
-                          current.id === item.id ? { ...current, name: event.target.value } : current,
-                        ),
-                      )
-                    }
-                  />
-                  <input
-                    className="draft-price"
-                    value={item.price}
-                    placeholder={item.priceMode === "custom" ? "Сумма при расчете" : "Цена"}
-                    inputMode="numeric"
-                    pattern="[0-9]*"
-                    disabled={item.priceMode === "custom"}
-                    onChange={(event) =>
-                      setDraftProducts((prev) =>
-                        prev.map((current) =>
-                          current.id === item.id
-                            ? {
-                                ...current,
-                                price: event.target.value.replace(/[^\d]/g, ""),
-                              }
-                            : current,
-                        ),
-                      )
-                    }
-                  />
-                  <label className="price-mode-toggle">
-                    <input
-                      type="checkbox"
-                      checked={item.priceMode === "custom"}
-                      onChange={(event) =>
-                        setDraftProducts((prev) =>
-                          prev.map((current) =>
-                            current.id === item.id
-                              ? {
-                                  ...current,
-                                  priceMode: event.target.checked ? "custom" : "fixed",
-                                  price: event.target.checked ? "" : current.price,
-                                }
-                              : current,
-                          ),
-                        )
-                      }
-                    />
-                    Свободная цена
-                  </label>
-                  {index === draftProducts.length - 1 && (
-                    <button
-                      className="ghost-btn"
-                      onClick={saveCategory}
-                    >
-                      Сохранить категорию
-                    </button>
-                  )}
-                </div>
-              ))}
-            </div>
-
-            {formMessage && <p className="status">{formMessage}</p>}
-
-            {extraCategories.length > 0 && (
-              <div className="user-categories">
-                <h3>Мои категории</h3>
-                <div className="user-categories-list">
-                  {extraCategories.map((category) => (
-                    <div key={category.id} className="user-category-row">
-                      <span>
-                        {category.name} ({category.items.length})
-                      </span>
-                      <button
-                        className="icon-action-btn danger"
-                        onClick={() => deleteExtraCategory(category.id)}
-                        aria-label={`Удалить категорию ${category.name}`}
-                        title="Удалить категорию"
-                      >
-                        <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true">
-                          <path
-                            d="M7 7l10 10M17 7L7 17"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          />
-                        </svg>
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </section>
+          <AddCategoryScreen
+            newCategoryName={newCategoryName}
+            setNewCategoryName={setNewCategoryName}
+            draftProducts={draftProducts}
+            setDraftProducts={setDraftProducts}
+            saveCategory={saveCategory}
+            formMessage={formMessage}
+            extraCategories={extraCategories}
+            deleteExtraCategory={deleteExtraCategory}
+            renderHeader={renderHeader}
+          />
         )}
       </div>
     </div>

@@ -23,6 +23,10 @@
 .home {
   text-align: left;
   padding: 18px;
+  min-height: calc(100dvh - 120px);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
 h1,
@@ -48,11 +52,16 @@ h3 {
 
 .hero-panel h1 {
   color: #f4f8fb;
+  font-size: 24px;
+  line-height: 1.18;
+  letter-spacing: -0.01em;
+  font-weight: 700;
+  margin: 0;
 }
 
 .hero-panel .subtitle {
   color: rgba(235, 243, 248, 0.9);
-  margin: 0 0 0;
+  margin: 8px 0 0;
 }
 
 .small-note {
@@ -119,14 +128,19 @@ h3 {
 }
 
 .menu-card__icon {
-  width: 28px;
-  height: 28px;
+  width: 38px;
+  height: 38px;
   border-radius: 8px;
   background: rgba(255, 255, 255, 0.58);
   color: #244550;
   display: inline-flex;
   align-items: center;
   justify-content: center;
+}
+
+.menu-card__icon svg {
+  width: 20px;
+  height: 20px;
 }
 
 .menu-card__desc {
@@ -560,6 +574,10 @@ h3 {
 
   .screen {
     padding: 14px;
+  }
+
+  .home {
+    min-height: calc(100dvh - 84px);
   }
 
   .draft-row {
