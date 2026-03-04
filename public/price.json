@@ -1,0 +1,99 @@
+{
+  "categories": [
+    {
+      "id": "latex",
+      "name": "Латекс",
+      "items": [
+        { "id": "latex-chrome", "name": "Хром", "price": 90 },
+        { "id": "latex-confetti", "name": "Конфетти", "price": 90 },
+        { "id": "latex-pastel", "name": "Пастель", "price": 85 },
+        { "id": "latex-print", "name": "С рисунком", "price": 100 },
+        { "id": "latex-bows", "name": "С бантиками", "price": 120 },
+        { "id": "latex-paint", "name": "С краской", "price": 110 },
+        { "id": "latex-mini", "name": "Мини шары (в латексе)", "price": 35 }
+      ]
+    },
+    {
+      "id": "latex-giants",
+      "name": "Латекс гиганты",
+      "items": [
+        { "id": "giant-bows", "name": "С бантиками", "price": 1500 },
+        { "id": "giant-basic", "name": "Гигант", "price": 1350 },
+        { "id": "giant-print", "name": "С рисунком", "price": 1400 }
+      ]
+    },
+    {
+      "id": "bubbles",
+      "name": "Баблс",
+      "items": [
+        { "id": "bubble-fatin", "name": "С фатином", "price": 850 },
+        { "id": "bubble-bows", "name": "С бантиками", "price": 850 },
+        { "id": "bubble-choco", "name": "С пенопластом", "price": 850 },
+        { "id": "bubble-balloons", "name": "С шариками", "price": 750 },
+        { "id": "bubble-feathers", "name": "С перьями", "price": 850 },
+        { "id": "bubble-flowers", "name": "С цветами", "price": 850 }
+      ]
+    },
+    {
+      "id": "foil",
+      "name": "Фольга",
+      "items": [
+        { "id": "foil-heart-45", "name": "Сердца 45 см", "price": 150 },
+        { "id": "foil-heart-70", "name": "Сердца 70 см", "price": 600 },
+        { "id": "foil-heart-90", "name": "Сердца 90 см", "price": 750 },
+        { "id": "foil-number-no-decor", "name": "Цифры без декора", "price": 450 },
+        { "id": "foil-number-decor", "name": "Цифры с декором", "price": 550 }
+      ]
+    },
+    {
+      "id": "figures",
+      "name": "Фигуры",
+      "items": [
+        { "id": "fig-xs", "name": "XS", "price": 300 },
+        { "id": "fig-s", "name": "S", "price": 350 },
+        { "id": "fig-m", "name": "M", "price": 450 },
+        { "id": "fig-l", "name": "L", "price": 500 },
+        { "id": "fig-xl", "name": "XL", "price": 650 },
+        { "id": "fig-walk-s", "name": "Ходячие S", "price": 1000 },
+        { "id": "fig-walk-m", "name": "Ходячие M", "price": 1500 },
+        { "id": "fig-walk-l", "name": "Ходячие L", "price": 1800 }
+      ]
+    },
+    {
+      "id": "boxes",
+      "name": "Коробки",
+      "items": [{ "id": "box", "name": "Коробки", "price": 750 }]
+    },
+    {
+      "id": "decor",
+      "name": "Декор",
+      "items": [
+        { "id": "decor-ribbons", "name": "Атласные ленты", "price": 15 },
+        { "id": "decor-tail", "name": "Хвостик", "price": 15 },
+        { "id": "decor-chain", "name": "Цепочка из шаров", "price": 105 }
+      ]
+    },
+    {
+      "id": "gender-balloon",
+      "name": "Гендерній шар",
+      "items": [
+        { "id": "gender-color", "name": "Цветной", "price": 1600 },
+        { "id": "gender-black", "name": "Чорный", "price": 1400 },
+        { "id": "gender-chrome", "name": "Хром", "price": 1650 }
+      ]
+    },
+    {
+      "id": "extra",
+      "name": "Дополнительно",
+      "items": [
+        { "id": "extra-photo", "name": "Фото", "price": 300 },
+        { "id": "extra-title", "name": "Надпись", "price": 0, "priceMode": "custom" }
+      ]
+    },
+    {
+      "id": "delivery",
+      "name": "Доставка",
+      "items": [{ "id": "delivery-custom", "name": "Доставка", "price": 0, "priceMode": "custom" }]
+    }
+  ]
+}
