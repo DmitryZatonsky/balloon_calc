@@ -32,6 +32,7 @@ export function AddCategoryScreen({
       <label className="field">
         <span>Название категории</span>
         <input
+          className="ui-input"
           value={newCategoryName}
           onChange={(event) => setNewCategoryName(event.target.value)}
           placeholder="Например: Фольга"
@@ -42,7 +43,7 @@ export function AddCategoryScreen({
         {draftProducts.map((item, index) => (
           <div key={item.id} className="draft-row">
             <input
-              className="draft-name"
+              className="ui-input draft-name"
               value={item.name}
               placeholder="Название товара"
               onChange={(event) =>
@@ -55,7 +56,7 @@ export function AddCategoryScreen({
             />
 
             <input
-              className="draft-price"
+              className="ui-input draft-price"
               value={item.price}
               placeholder={item.priceMode === "custom" ? "Сумма при расчете" : "Цена"}
               inputMode="numeric"
@@ -97,7 +98,7 @@ export function AddCategoryScreen({
             </label>
 
             {index === draftProducts.length - 1 && (
-              <button className="ghost-btn" onClick={saveCategory}>
+              <button className="ui-btn ui-btn--primary main-btn" onClick={saveCategory}>
                 Сохранить категорию
               </button>
             )}
@@ -117,7 +118,7 @@ export function AddCategoryScreen({
                   {category.name} ({category.items.length})
                 </span>
                 <button
-                  className="icon-action-btn danger"
+                  className="ui-icon-btn icon-action-btn danger"
                   onClick={() => deleteExtraCategory(category.id)}
                   aria-label={`Удалить категорию ${category.name}`}
                   title="Удалить категорию"

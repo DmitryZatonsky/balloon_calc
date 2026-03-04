@@ -57,7 +57,7 @@ export function CalcScreen({
           return (
             <article key={category.id} className={`category-card ${isOpen ? "is-open" : ""}`}>
               <button
-                className="category-btn"
+                className="ui-btn ui-btn--ghost category-btn"
                 onClick={() => setOpenCategoryId(isOpen ? null : category.id)}
               >
                 <span>{category.name}</span>
@@ -94,7 +94,7 @@ export function CalcScreen({
 
                           {product.priceMode === "custom" ? (
                             <input
-                              className="custom-amount-input"
+                              className="ui-input custom-amount-input"
                               inputMode="numeric"
                               placeholder="Сумма"
                               value={customAmounts[key] ?? ""}
@@ -128,10 +128,10 @@ export function CalcScreen({
       </div>
 
       <div className="calc-actions">
-        <button className="main-btn" onClick={handleCalculate}>
+        <button className="ui-btn ui-btn--primary main-btn" onClick={handleCalculate}>
           Рассчитать
         </button>
-        <button className="ghost-btn" onClick={resetCalc}>
+        <button className="ui-btn ui-btn--ghost ghost-btn" onClick={resetCalc}>
           Сбросить
         </button>
       </div>
@@ -141,7 +141,7 @@ export function CalcScreen({
           <div className="result-head">
             <h3>Результат</h3>
             <button
-              className="copy-icon-btn"
+              className="ui-icon-btn copy-icon-btn"
               onClick={handleCopy}
               aria-label="Скопировать расчет"
               title="Скопировать"
@@ -174,7 +174,7 @@ export function CalcScreen({
             <strong>{formatMoney(total)}</strong>
           </div>
 
-          <button className="main-btn save-btn" onClick={handleSaveCalculation}>
+          <button className="ui-btn ui-btn--primary main-btn save-btn" onClick={handleSaveCalculation}>
             Сохранить
           </button>
         </article>

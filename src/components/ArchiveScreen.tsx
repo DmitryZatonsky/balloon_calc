@@ -44,7 +44,7 @@ export function ArchiveScreen({
 
                   <div className="archive-actions">
                     <button
-                      className="icon-action-btn"
+                      className="ui-icon-btn icon-action-btn"
                       aria-label="Редактировать расчет"
                       title="Редактировать"
                       onClick={(event) => {
@@ -65,7 +65,7 @@ export function ArchiveScreen({
                     </button>
 
                     <button
-                      className="icon-action-btn danger"
+                      className="ui-icon-btn icon-action-btn danger"
                       aria-label="Удалить расчет"
                       title="Удалить"
                       onClick={(event) => {

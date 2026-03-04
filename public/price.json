@@ -6,20 +6,20 @@
       "items": [
         { "id": "latex-chrome", "name": "Хром", "price": 90 },
         { "id": "latex-confetti", "name": "Конфетти", "price": 90 },
-        { "id": "latex-pastel", "name": "Пастель", "price": 85 },
+        { "id": "latex-pastel", "name": "Пастель", "price": 75 },
         { "id": "latex-print", "name": "С рисунком", "price": 100 },
         { "id": "latex-bows", "name": "С бантиками", "price": 120 },
         { "id": "latex-paint", "name": "С краской", "price": 110 },
-        { "id": "latex-mini", "name": "Мини шары (в латексе)", "price": 35 }
+        { "id": "latex-mini", "name": "Мини шары", "price": 35 }
       ]
     },
     {
       "id": "latex-giants",
       "name": "Латекс гиганты",
       "items": [
-        { "id": "giant-bows", "name": "С бантиками", "price": 1500 },
         { "id": "giant-basic", "name": "Гигант", "price": 1350 },
-        { "id": "giant-print", "name": "С рисунком", "price": 1400 }
+        { "id": "giant-bows", "name": "С бантиками", "price": 1500 },
+        { "id": "giant-print", "name": "Стеклянный", "price": 1400 }
       ]
     },
     {
@@ -30,8 +30,8 @@
         { "id": "bubble-bows", "name": "С бантиками", "price": 850 },
         { "id": "bubble-choco", "name": "С пенопластом", "price": 850 },
         { "id": "bubble-balloons", "name": "С шариками", "price": 750 },
-        { "id": "bubble-feathers", "name": "С перьями", "price": 850 },
-        { "id": "bubble-flowers", "name": "С цветами", "price": 850 }
+        { "id": "bubble-feathers", "name": "С перьями", "price": 750 },
+        { "id": "bubble-flowers", "name": "С долларами", "price": 850 }
       ]
     },
     {
@@ -75,10 +75,10 @@
     },
     {
       "id": "gender-balloon",
-      "name": "Гендерній шар",
+      "name": "Гендерный шар",
       "items": [
-        { "id": "gender-color", "name": "Цветной", "price": 1600 },
         { "id": "gender-black", "name": "Чорный", "price": 1400 },
+        { "id": "gender-color", "name": "Цветной", "price": 1600 },
         { "id": "gender-chrome", "name": "Хром", "price": 1650 }
       ]
     },
