@@ -8,7 +8,7 @@ export function HomeScreen({ setScreen }: Props) {
   return (
     <section className="screen home">
       <div className="hero-panel">
-        <h1>Карманный PWA-калькулятор</h1>
+        <h1>Калькулятор надувателя</h1>
         <p className="subtitle">Для расчета заказа шариков.</p>
       </div>
 
