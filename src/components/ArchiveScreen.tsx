@@ -87,22 +87,27 @@ export function ArchiveScreen({
                   </div>
                 </div>
 
-                {isExpanded && (
-                  <>
-                    <ul>
-                      {record.lines.map((line, index) => (
-                        <li key={`${record.id}-${line.productName}-${index}`}>
-                          {line.productName} x {line.quantity} = {line.lineTotal} грн
-                        </li>
-                      ))}
-                    </ul>
+                <div className={`archive-details ${isExpanded ? "is-open" : ""}`} aria-hidden={!isExpanded}>
+                  <ul>
+                    {record.lines.map((line, index) => (
+                      <li key={`${record.id}-${line.productName}-${index}`}>
+                        <span className="line-label">
+                          <span>{line.productName}</span>
+                          <span className="line-category">{line.categoryName}</span>
+                        </span>
+                        <span className="line-meta">
+                          <span className="line-qty">x {line.quantity}</span>
+                          <strong>{formatMoney(line.lineTotal)}</strong>
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
 
-                    <div className="total-row">
-                      <span>Всего</span>
-                      <strong>{formatMoney(record.total)}</strong>
-                    </div>
-                  </>
-                )}
+                  <div className="total-row">
+                    <span>Всего</span>
+                    <strong>{formatMoney(record.total)}</strong>
+                  </div>
+                </div>
               </article>
             );
           })}

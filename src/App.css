@@ -426,11 +426,42 @@ h3 {
   gap: 8px;
 }
 
-.result-card li {
+.result-card li,
+.archive-card li {
   display: flex;
-  align-items: center;
+  align-items: stretch;
   justify-content: space-between;
   gap: 10px;
+}
+
+.line-label {
+  display: grid;
+  gap: 1px;
+  color: var(--text-main);
+}
+
+.line-category {
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.2;
+}
+
+.line-meta {
+  min-width: 110px;
+  display: flex;
+  align-self: stretch;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  line-height: 1.2;
+}
+
+.line-qty {
+  color: var(--text-muted);
+  font-size: 15px;
+  font-weight: 600;
+  white-space: nowrap;
 }
 
 .archive-top,
@@ -459,6 +490,29 @@ h3 {
   display: inline-flex;
   align-items: center;
   gap: 6px;
+}
+
+.archive-details {
+  display: grid;
+  gap: 8px;
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  pointer-events: none;
+  transform: translateY(-6px);
+  transition:
+    max-height 0.3s ease,
+    opacity 0.2s ease,
+    transform 0.25s ease,
+    margin-top 0.25s ease;
+}
+
+.archive-details.is-open {
+  max-height: 900px;
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+  margin-top: 8px;
 }
 
 .icon-action-btn {
