@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type {
   Category,
+  CalculationLine,
   DraftProduct,
   PriceData,
   Product,
@@ -50,6 +51,7 @@ export function useBalloonCalc() {
   const [saveMessage, setSaveMessage] = useState<string>("");
   const [copyMessage, setCopyMessage] = useState<string>("");
   const [formMessage, setFormMessage] = useState<string>("");
+  const [archiveMessage, setArchiveMessage] = useState<string>("");
   const [showSaveSuccess, setShowSaveSuccess] = useState<boolean>(false);
   const [saveSuccessToken, setSaveSuccessToken] = useState<number>(0);
   const saveSuccessTimerRef = useRef<number | null>(null);
@@ -318,6 +320,7 @@ export function useBalloonCalc() {
 
   function handleDeleteCalculation(id: string): void {
     archive.deleteRecord(id);
+    setArchiveMessage("Запись удалена.");
   }
 
   function handleEditCalculation(record: SavedCalculation): void {
@@ -329,6 +332,123 @@ export function useBalloonCalc() {
       setCopyMessage(`Загружено позиций: ${matched}`);
     } else {
       setCopyMessage("Не удалось сопоставить позиции с текущим прайсом.");
+    }
+  }
+
+  function isValidCalculationLine(value: unknown): value is CalculationLine {
+    if (!value || typeof value !== "object") {
+      return false;
+    }
+    const line = value as Partial<CalculationLine>;
+    return (
+      typeof line.categoryName === "string" &&
+      typeof line.productName === "string" &&
+      typeof line.quantity === "number" &&
+      Number.isFinite(line.quantity) &&
+      line.quantity >= 0 &&
+      typeof line.unitPrice === "number" &&
+      Number.isFinite(line.unitPrice) &&
+      line.unitPrice >= 0 &&
+      typeof line.lineTotal === "number" &&
+      Number.isFinite(line.lineTotal) &&
+      line.lineTotal >= 0
+    );
+  }
+
+  function normalizeImportedArchive(raw: unknown): SavedCalculation[] {
+    const source = Array.isArray(raw)
+      ? raw
+      : raw &&
+          typeof raw === "object" &&
+          "calculations" in raw &&
+          Array.isArray((raw as { calculations?: unknown }).calculations)
+        ? ((raw as { calculations: unknown[] }).calculations ?? [])
+        : [];
+
+    const normalized: SavedCalculation[] = [];
+    for (const item of source) {
+      if (!item || typeof item !== "object") {
+        continue;
+      }
+      const record = item as Partial<SavedCalculation>;
+      if (typeof record.id !== "string" || typeof record.createdAt !== "string") {
+        continue;
+      }
+      if (typeof record.total !== "number" || !Number.isFinite(record.total) || record.total < 0) {
+        continue;
+      }
+      if (!Array.isArray(record.lines)) {
+        continue;
+      }
+      const lines = record.lines.filter(isValidCalculationLine);
+      if (lines.length !== record.lines.length) {
+        continue;
+      }
+      normalized.push({
+        id: record.id,
+        createdAt: record.createdAt,
+        lines,
+        total: record.total,
+      });
+    }
+
+    const deduplicated = Array.from(new Map(normalized.map((record) => [record.id, record])).values());
+    return deduplicated.sort(
+      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+    );
+  }
+
+  function handleExportArchive(): void {
+    if (archive.sortedArchive.length === 0) {
+      setArchiveMessage("Архив пуст. Экспортировать нечего.");
+      return;
+    }
+
+    const now = new Date();
+    const y = now.getFullYear();
+    const m = String(now.getMonth() + 1).padStart(2, "0");
+    const d = String(now.getDate()).padStart(2, "0");
+    const hh = String(now.getHours()).padStart(2, "0");
+    const mm = String(now.getMinutes()).padStart(2, "0");
+    const fileName = `balloon-archive-${y}${m}${d}-${hh}${mm}.json`;
+
+    const payload = {
+      version: 1,
+      exportedAt: now.toISOString(),
+      calculations: archive.sortedArchive,
+    };
+
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = fileName;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    setArchiveMessage(`Экспортировано записей: ${archive.sortedArchive.length}`);
+    triggerSuccessPulse();
+  }
+
+  async function handleImportArchiveFile(file: File): Promise<void> {
+    try {
+      const text = await file.text();
+      const parsed = JSON.parse(text) as unknown;
+      const normalized = normalizeImportedArchive(parsed);
+
+      if (normalized.length === 0) {
+        setArchiveMessage("Файл пустой или не подходит по формату архива.");
+        return;
+      }
+
+      replaceArchive(normalized);
+      writeToStorage(CALCULATIONS_KEY, normalized);
+      archive.setExpandedArchiveId(null);
+      setArchiveMessage(`Восстановлено записей: ${normalized.length}`);
+      triggerSuccessPulse();
+    } catch {
+      setArchiveMessage("Не удалось восстановить архив. Проверьте файл.");
     }
   }
 
@@ -633,6 +753,7 @@ export function useBalloonCalc() {
     showSaveSuccess,
     saveSuccessToken,
     copyMessage,
+    archiveMessage,
     currencyAbbr,
     newCategoryName,
     setNewCategoryName,
@@ -652,6 +773,8 @@ export function useBalloonCalc() {
     handleSaveCalculation,
     handleDeleteCalculation,
     handleEditCalculation,
+    handleExportArchive,
+    handleImportArchiveFile,
     handleCopy,
     resetCalc,
     saveCategory,

@@ -26,6 +26,7 @@ function App() {
     showSaveSuccess,
     saveSuccessToken,
     copyMessage,
+    archiveMessage,
     currencyAbbr,
     newCategoryName,
     setNewCategoryName,
@@ -44,6 +45,8 @@ function App() {
     handleSaveCalculation,
     handleDeleteCalculation,
     handleEditCalculation,
+    handleExportArchive,
+    handleImportArchiveFile,
     handleCopy,
     resetCalc,
     saveCategory,
@@ -154,8 +157,6 @@ function App() {
             handleCopy={handleCopy}
             handleSaveCalculation={handleSaveCalculation}
             saveMessage={saveMessage}
-            showSaveSuccess={showSaveSuccess}
-            saveSuccessToken={saveSuccessToken}
             copyMessage={copyMessage}
             resultCardRef={resultCardRef}
             renderHeader={renderHeader}
@@ -170,6 +171,9 @@ function App() {
             currencyAbbr={currencyAbbr}
             handleEditCalculation={handleEditCalculation}
             handleDeleteCalculation={handleDeleteCalculation}
+            handleExportArchive={handleExportArchive}
+            handleImportArchiveFile={handleImportArchiveFile}
+            archiveMessage={archiveMessage}
             renderHeader={renderHeader}
           />
         )}
@@ -200,6 +204,23 @@ function App() {
             updateProductPrice={updateProductPrice}
             renderHeader={renderHeader}
           />
+        )}
+
+        {showSaveSuccess && (
+          <div key={saveSuccessToken} className="save-success-overlay" aria-hidden="true">
+            <div className="save-success-circle">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path
+                  d="M6 12.5l4.2 4.2L18 9"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </div>
+          </div>
         )}
       </div>
     </div>

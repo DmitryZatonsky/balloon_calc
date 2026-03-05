@@ -23,8 +23,6 @@ type Props = {
   handleCopy: (lang: ResultLanguage) => Promise<void>;
   handleSaveCalculation: () => void;
   saveMessage: string;
-  showSaveSuccess: boolean;
-  saveSuccessToken: number;
   copyMessage: string;
   resultCardRef: RefObject<HTMLElement | null>;
   renderHeader: (title: string) => React.ReactNode;
@@ -49,8 +47,6 @@ export function CalcScreen({
   handleCopy,
   handleSaveCalculation,
   saveMessage,
-  showSaveSuccess,
-  saveSuccessToken,
   copyMessage,
   resultCardRef,
   renderHeader,
@@ -218,22 +214,6 @@ export function CalcScreen({
 
       {saveMessage && <p className="status">{saveMessage}</p>}
       {copyMessage && <p className="status">{copyMessage}</p>}
-      {showSaveSuccess && (
-        <div key={saveSuccessToken} className="save-success-overlay" aria-hidden="true">
-          <div className="save-success-circle">
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <path
-                d="M6 12.5l4.2 4.2L18 9"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-          </div>
-        </div>
-      )}
     </section>
   );
 }

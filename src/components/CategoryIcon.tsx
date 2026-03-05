@@ -39,8 +39,14 @@ export function CategoryIcon({ categoryId, categoryName, className }: Props) {
     case "latex":
       return (
         <IconBase className={className}>
-          <circle cx="12" cy="8" r="5" />
-          <path d="M12 13v5M10.5 18.5L12 21l1.5-2.5" strokeLinecap="round" strokeLinejoin="round" />
+          <ellipse cx="12" cy="8" rx="4.8" ry="5.8" />
+          <path d="M10.8 13.1h2.4l-.6 1.9h-1.2l-.6-1.9z" strokeLinejoin="round" />
+          <path d="M10.6 5.2c.6-1.1 1.4-1.8 2.6-2.1" strokeLinecap="round" />
+          <path
+            d="M12 15.1c1.1 1.8-.7 2.8-.4 4.4.2 1.2 1.1 2 .6 3.4"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
         </IconBase>
       );
     case "latex-giants":
@@ -89,8 +95,10 @@ export function CategoryIcon({ categoryId, categoryName, className }: Props) {
     case "gender":
       return (
         <IconBase className={className}>
-          <circle cx="12" cy="8" r="5" />
-          <path d="M12 3v10M7 8h10M12 13v6" strokeLinecap="round" />
+          <circle cx="9" cy="13" r="4.2" />
+          <circle cx="14.5" cy="8.8" r="4.2" />
+          <path d="M16.8 6.5l3.7-3.7M17.7 2.8h2.8v2.8" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M7 17l-2.7 2.7M4.3 17H7v2.7" strokeLinecap="round" strokeLinejoin="round" />
         </IconBase>
       );
     case "extra":

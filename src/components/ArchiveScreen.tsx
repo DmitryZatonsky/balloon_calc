@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
+import type { ChangeEvent } from "react";
 import type { Dispatch, SetStateAction } from "react";
 import type { SavedCalculation } from "../types";
 import { formatMoney } from "../utils";
@@ -10,6 +11,9 @@ type Props = {
   currencyAbbr: string;
   handleEditCalculation: (record: SavedCalculation) => void;
   handleDeleteCalculation: (id: string) => void;
+  handleExportArchive: () => void;
+  handleImportArchiveFile: (file: File) => Promise<void>;
+  archiveMessage: string;
   renderHeader: (title: string) => React.ReactNode;
 };
 
@@ -20,9 +24,14 @@ export function ArchiveScreen({
   currencyAbbr,
   handleEditCalculation,
   handleDeleteCalculation,
+  handleExportArchive,
+  handleImportArchiveFile,
+  archiveMessage,
   renderHeader,
 }: Props) {
   const [pendingDelete, setPendingDelete] = useState<{ id: string; label: string } | null>(null);
+  const [isImporting, setIsImporting] = useState<boolean>(false);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   function confirmDelete(): void {
     if (!pendingDelete) {
@@ -32,10 +41,43 @@ export function ArchiveScreen({
     setPendingDelete(null);
   }
 
+  async function onImportFileChange(event: ChangeEvent<HTMLInputElement>): Promise<void> {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) {
+      return;
+    }
+    setIsImporting(true);
+    await handleImportArchiveFile(file);
+    setIsImporting(false);
+  }
+
   return (
     <>
       <section className="screen archive">
         {renderHeader("Архив")}
+        <div className="archive-tools">
+          <button className="ui-btn ui-btn--ghost archive-tool-btn" onClick={handleExportArchive}>
+            Экспорт
+          </button>
+          <button
+            className="ui-btn ui-btn--ghost archive-tool-btn"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={isImporting}
+          >
+            {isImporting ? "Загрузка..." : "Восстановить"}
+          </button>
+          <input
+            ref={fileInputRef}
+            className="archive-file-input"
+            type="file"
+            accept="application/json,.json"
+            onChange={(event) => {
+              void onImportFileChange(event);
+            }}
+          />
+        </div>
+        {archiveMessage && <p className="status">{archiveMessage}</p>}
 
         {sortedArchive.length === 0 ? (
           <p className="empty">Пока нет сохраненных расчетов.</p>

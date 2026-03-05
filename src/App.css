@@ -238,6 +238,21 @@ h3 {
   gap: 10px;
 }
 
+.archive-tools {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.archive-tool-btn {
+  min-height: 40px;
+}
+
+.archive-file-input {
+  display: none;
+}
+
 .calc .category-list {
   gap: 8px;
 }
