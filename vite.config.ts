@@ -50,6 +50,9 @@ export default defineConfig({
     VitePWA({
       registerType: "autoUpdate",
       workbox: {
+        cleanupOutdatedCaches: true,
+        clientsClaim: true,
+        skipWaiting: true,
         globPatterns: ["**/*.{html,css,js,ico,png,svg}"],
       },
       manifest: manifest,
@@ -57,5 +60,4 @@ export default defineConfig({
     }),
   ],
 });
-
 
