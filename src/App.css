@@ -270,10 +270,14 @@ h3 {
 }
 
 .category-btn__icon {
-  width: 18px;
-  height: 18px;
-  color: #315a66;
-  flex: 0 0 18px;
+  width: 20px;
+  height: 20px;
+  color: #1f4f56;
+  flex: 0 0 20px;
+  display: block;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 .category-btn__label {
@@ -775,10 +779,10 @@ h3 {
 }
 
 .manage-category-btn .category-btn__icon {
-  width: 16px;
-  height: 16px;
-  color: #45616e;
-  flex-basis: 16px;
+  width: 18px;
+  height: 18px;
+  color: #2e5662;
+  flex-basis: 18px;
 }
 
 .manage-category-head .icon-action-btn {

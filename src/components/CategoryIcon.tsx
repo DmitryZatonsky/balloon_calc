@@ -26,7 +26,7 @@ function normalizeCategoryKey(categoryId: string, categoryName: string): string 
 
 function IconBase({ children, ...props }: SVGProps<SVGSVGElement>) {
   return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" {...props}>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" {...props}>
       {children}
     </svg>
   );
