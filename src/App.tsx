@@ -23,6 +23,8 @@ function App() {
     lines,
     total,
     saveMessage,
+    showSaveSuccess,
+    saveSuccessToken,
     copyMessage,
     currencyAbbr,
     newCategoryName,
@@ -152,6 +154,8 @@ function App() {
             handleCopy={handleCopy}
             handleSaveCalculation={handleSaveCalculation}
             saveMessage={saveMessage}
+            showSaveSuccess={showSaveSuccess}
+            saveSuccessToken={saveSuccessToken}
             copyMessage={copyMessage}
             resultCardRef={resultCardRef}
             renderHeader={renderHeader}

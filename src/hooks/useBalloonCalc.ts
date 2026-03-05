@@ -1,10 +1,20 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import type { Category, DraftProduct, PriceData, Product, SavedCalculation, Screen } from "../types";
+import type {
+  Category,
+  DraftProduct,
+  PriceData,
+  Product,
+  ResultLanguage,
+  SavedCalculation,
+  Screen,
+} from "../types";
 import {
   buildIdFromDate,
   buildItemKey,
   createDraftProduct,
   readArrayFromStorage,
+  translateCategoryName,
+  translateProductName,
   writeToStorage,
 } from "../utils";
 import { useArchive } from "./useArchive";
@@ -40,6 +50,9 @@ export function useBalloonCalc() {
   const [saveMessage, setSaveMessage] = useState<string>("");
   const [copyMessage, setCopyMessage] = useState<string>("");
   const [formMessage, setFormMessage] = useState<string>("");
+  const [showSaveSuccess, setShowSaveSuccess] = useState<boolean>(false);
+  const [saveSuccessToken, setSaveSuccessToken] = useState<number>(0);
+  const saveSuccessTimerRef = useRef<number | null>(null);
 
   const [newCategoryName, setNewCategoryName] = useState<string>("");
   const [targetCategoryId, setTargetCategoryId] = useState<string>("");
@@ -83,6 +96,7 @@ export function useBalloonCalc() {
   }
 
   const archive = useArchive();
+  const { replaceArchive } = archive;
   const calc = useCalcEngine();
 
   useEffect(() => {
@@ -107,7 +121,7 @@ export function useBalloonCalc() {
             // Важно: не затираем локальный архив данными из data.json.
             const localArchive = readArrayFromStorage<SavedCalculation>(CALCULATIONS_KEY);
             if (localArchive.length === 0) {
-              archive.replaceArchive(archiveJson);
+              replaceArchive(archiveJson);
             }
           }
         }
@@ -123,7 +137,7 @@ export function useBalloonCalc() {
     return () => {
       canceled = true;
     };
-  }, []);
+  }, [replaceArchive]);
 
   useEffect(() => {
     const localArchive = readArrayFromStorage<SavedCalculation>(CALCULATIONS_KEY);
@@ -135,7 +149,7 @@ export function useBalloonCalc() {
     const rawCurrencyAbbr = localStorage.getItem(CURRENCY_ABBR_KEY);
 
     if (localArchive.length > 0) {
-      archive.replaceArchive(localArchive);
+      replaceArchive(localArchive);
     }
     if (localExtraCategories.length > 0) {
       setExtraCategories(localExtraCategories);
@@ -195,7 +209,7 @@ export function useBalloonCalc() {
     if (typeof rawCurrencyAbbr === "string" && rawCurrencyAbbr.trim().length > 0) {
       setCurrencyAbbr(rawCurrencyAbbr.trim());
     }
-  }, []);
+  }, [replaceArchive]);
 
   useEffect(() => {
     if (!scrollToResultOnCalcOpen || screen !== "calc" || calc.lines.length === 0) {
@@ -209,6 +223,14 @@ export function useBalloonCalc() {
 
     return () => window.clearTimeout(timer);
   }, [calc.lines.length, screen, scrollToResultOnCalcOpen]);
+
+  useEffect(() => {
+    return () => {
+      if (saveSuccessTimerRef.current !== null) {
+        window.clearTimeout(saveSuccessTimerRef.current);
+      }
+    };
+  }, []);
 
   const categories = useMemo(() => {
     const base = [...priceData.categories, ...extraCategories];
@@ -249,19 +271,6 @@ export function useBalloonCalc() {
     return index;
   }, [categories]);
 
-  const linesForCopy = useMemo(() => {
-    if (calc.lines.length === 0) {
-      return "";
-    }
-
-    const rows = calc.lines.map(
-      (line) =>
-        `${line.productName} - ${line.quantity} x ${line.unitPrice} = ${line.lineTotal} ${currencyAbbr}`,
-    );
-
-    return `${rows.join("\n")}\nВсего: ${calc.total} ${currencyAbbr}`;
-  }, [calc.lines, calc.total, currencyAbbr]);
-
   function updateCurrencyAbbr(nextValue: string): void {
     const normalized = nextValue.trim();
     const safeValue = normalized.length > 0 ? normalized.slice(0, 8) : "грн";
@@ -275,6 +284,17 @@ export function useBalloonCalc() {
     setSaveMessage("");
     setCopyMessage("");
     setScrollToResultOnCalcOpen(result.lines.length > 0);
+  }
+
+  function triggerSuccessPulse(): void {
+    setShowSaveSuccess(true);
+    setSaveSuccessToken((prev) => prev + 1);
+    if (saveSuccessTimerRef.current !== null) {
+      window.clearTimeout(saveSuccessTimerRef.current);
+    }
+    saveSuccessTimerRef.current = window.setTimeout(() => {
+      setShowSaveSuccess(false);
+    }, 1000);
   }
 
   function handleSaveCalculation(): void {
@@ -293,6 +313,7 @@ export function useBalloonCalc() {
     });
 
     setSaveMessage(`Сохранено в архив: ${id}`);
+    triggerSuccessPulse();
   }
 
   function handleDeleteCalculation(id: string): void {
@@ -311,15 +332,24 @@ export function useBalloonCalc() {
     }
   }
 
-  async function handleCopy(): Promise<void> {
-    if (!linesForCopy) {
+  async function handleCopy(lang: ResultLanguage): Promise<void> {
+    if (calc.lines.length === 0) {
       setCopyMessage("Пока нечего копировать.");
       return;
     }
 
+    const totalLabel = lang === "ua" ? "Всього" : "Всего";
+    const rows = calc.lines.map((line) => {
+      const translatedCategory = translateCategoryName(line.categoryName, lang);
+      const translatedProduct = translateProductName(line.productName, lang);
+      return `${translatedProduct} (${translatedCategory}) - ${line.quantity} x ${line.unitPrice} = ${line.lineTotal} ${currencyAbbr}`;
+    });
+    const textToCopy = `${rows.join("\n")}\n${totalLabel}: ${calc.total} ${currencyAbbr}`;
+
     try {
-      await navigator.clipboard.writeText(linesForCopy);
+      await navigator.clipboard.writeText(textToCopy);
       setCopyMessage("Скопировано в буфер.");
+      triggerSuccessPulse();
     } catch {
       setCopyMessage("Не удалось скопировать.");
     }
@@ -600,6 +630,8 @@ export function useBalloonCalc() {
     lines: calc.lines,
     total: calc.total,
     saveMessage,
+    showSaveSuccess,
+    saveSuccessToken,
     copyMessage,
     currencyAbbr,
     newCategoryName,

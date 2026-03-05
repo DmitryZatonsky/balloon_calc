@@ -87,6 +87,7 @@
       "name": "Дополнительно",
       "items": [
         { "id": "extra-photo", "name": "Фото", "price": 300 },
+        { "id": "extra-packages", "name": "Транспортировочные пакеты", "price": 25 },
         { "id": "extra-title", "name": "Надпись", "price": 0, "priceMode": "custom" }
       ]
     },

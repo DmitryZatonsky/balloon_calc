@@ -55,6 +55,7 @@ export function PriceManagerScreen({
 
       <PriceManagerPanel
         categories={categories}
+        currencyAbbr={currencyAbbr}
         deleteCategory={deleteCategory}
         deleteProduct={deleteProduct}
         updateProductPrice={updateProductPrice}

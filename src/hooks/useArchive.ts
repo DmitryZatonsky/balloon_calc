@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import type { SavedCalculation } from "../types";
 import { writeToStorage } from "../utils";
 
@@ -16,19 +16,19 @@ export function useArchive() {
     [savedCalculations],
   );
 
-  function replaceArchive(data: SavedCalculation[]): void {
+  const replaceArchive = useCallback((data: SavedCalculation[]): void => {
     setSavedCalculations(data);
-  }
+  }, []);
 
-  function saveRecord(record: SavedCalculation): void {
+  const saveRecord = useCallback((record: SavedCalculation): void => {
     setSavedCalculations((prev) => {
       const next = [record, ...prev];
       writeToStorage(CALCULATIONS_KEY, next);
       return next;
     });
-  }
+  }, []);
 
-  function deleteRecord(id: string): void {
+  const deleteRecord = useCallback((id: string): void => {
     setSavedCalculations((prev) => {
       const next = prev.filter((item) => item.id !== id);
       writeToStorage(CALCULATIONS_KEY, next);
@@ -36,7 +36,7 @@ export function useArchive() {
     });
 
     setExpandedArchiveId((prev) => (prev === id ? null : prev));
-  }
+  }, []);
 
   return {
     savedCalculations,

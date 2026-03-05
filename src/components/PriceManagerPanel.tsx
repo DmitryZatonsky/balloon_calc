@@ -4,6 +4,7 @@ import { keepDigits } from "../utils";
 
 type Props = {
   categories: Category[];
+  currencyAbbr: string;
   deleteCategory: (categoryId: string) => void;
   deleteProduct: (categoryId: string, productId: string) => void;
   updateProductPrice: (categoryId: string, productId: string, nextPrice: number) => void;
@@ -11,6 +12,7 @@ type Props = {
 
 export function PriceManagerPanel({
   categories,
+  currencyAbbr,
   deleteCategory,
   deleteProduct,
   updateProductPrice,
@@ -147,21 +149,24 @@ export function PriceManagerPanel({
                     </div>
                     <div className="manage-actions">
                       {item.priceMode !== "custom" && (
-                        <input
-                          className="ui-input manage-inline-price-input"
-                          inputMode="numeric"
-                          value={getDraftPrice(category.id, item.id, item.price)}
-                          onChange={(event) =>
-                            updateDraftPrice(category.id, item.id, event.target.value)
-                          }
-                          onBlur={() => handlePriceBlur(category.id, item.id, item.price)}
-                          onKeyDown={(event) => {
-                            if (event.key === "Enter") {
-                              (event.currentTarget as HTMLInputElement).blur();
+                        <div className="manage-price-wrap">
+                          <input
+                            className="ui-input manage-inline-price-input"
+                            inputMode="numeric"
+                            value={getDraftPrice(category.id, item.id, item.price)}
+                            onChange={(event) =>
+                              updateDraftPrice(category.id, item.id, event.target.value)
                             }
-                          }}
-                          aria-label={`Цена товара ${item.name}`}
-                        />
+                            onBlur={() => handlePriceBlur(category.id, item.id, item.price)}
+                            onKeyDown={(event) => {
+                              if (event.key === "Enter") {
+                                (event.currentTarget as HTMLInputElement).blur();
+                              }
+                            }}
+                            aria-label={`Цена товара ${item.name}`}
+                          />
+                          <span className="manage-inline-currency">{currencyAbbr}</span>
+                        </div>
                       )}
                       <button
                         type="button"

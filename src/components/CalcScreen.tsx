@@ -1,6 +1,7 @@
+import { useState } from "react";
 import type { Dispatch, RefObject, SetStateAction } from "react";
-import type { Category, CalculationLine, Product } from "../types";
-import { formatMoney } from "../utils";
+import type { Category, CalculationLine, Product, ResultLanguage } from "../types";
+import { formatMoney, translateCategoryName, translateProductName } from "../utils";
 
 type Props = {
   categories: Category[];
@@ -18,9 +19,11 @@ type Props = {
   lines: CalculationLine[];
   total: number;
   currencyAbbr: string;
-  handleCopy: () => Promise<void>;
+  handleCopy: (lang: ResultLanguage) => Promise<void>;
   handleSaveCalculation: () => void;
   saveMessage: string;
+  showSaveSuccess: boolean;
+  saveSuccessToken: number;
   copyMessage: string;
   resultCardRef: RefObject<HTMLElement | null>;
   renderHeader: (title: string) => React.ReactNode;
@@ -45,10 +48,18 @@ export function CalcScreen({
   handleCopy,
   handleSaveCalculation,
   saveMessage,
+  showSaveSuccess,
+  saveSuccessToken,
   copyMessage,
   resultCardRef,
   renderHeader,
 }: Props) {
+  const [resultLang, setResultLang] = useState<ResultLanguage>("ru");
+
+  const resultTitle = resultLang === "ua" ? "Результат" : "Результат";
+  const totalLabel = resultLang === "ua" ? "Всього" : "Всего";
+  const saveLabel = resultLang === "ua" ? "Зберегти" : "Сохранить";
+
   return (
     <section className="screen calc">
       {renderHeader("Категории")}
@@ -87,13 +98,6 @@ export function CalcScreen({
                         </button>
                       ) : (
                         <div className="qty-control">
-                          <button
-                            className="qty-btn"
-                            onClick={() => setQuantity(category.id, product.id, qty - 1)}
-                          >
-                            −
-                          </button>
-
                           {product.priceMode === "custom" ? (
                             <input
                               className="ui-input custom-amount-input"
@@ -109,6 +113,12 @@ export function CalcScreen({
                             />
                           ) : (
                             <>
+                              <button
+                                className="qty-btn"
+                                onClick={() => setQuantity(category.id, product.id, qty - 1)}
+                              >
+                                −
+                              </button>
                               <span className="qty-value">{qty}</span>
                               <button
                                 className="qty-btn"
@@ -141,31 +151,43 @@ export function CalcScreen({
       {lines.length > 0 && (
         <article className="result-card" ref={resultCardRef}>
           <div className="result-head">
-            <h3>Результат</h3>
-            <button
-              className="ui-icon-btn copy-icon-btn"
-              onClick={handleCopy}
-              aria-label="Скопировать расчет"
-              title="Скопировать"
-            >
-              <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
-                <path
-                  d="M9 9h10v12H9zM5 3h10v2H7v10H5z"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.7"
-                  strokeLinejoin="round"
-                />
-              </svg>
-            </button>
+            <h3>{resultTitle}</h3>
+            <div className="result-head-actions">
+              <button
+                className="ui-icon-btn result-lang-btn"
+                onClick={() => setResultLang((prev) => (prev === "ru" ? "ua" : "ru"))}
+                aria-label="Переключить язык карточки результата"
+                title={resultLang === "ru" ? "Українська" : "Русский"}
+              >
+                {resultLang === "ru" ? "UA" : "RU"}
+              </button>
+              <button
+                className="ui-icon-btn copy-icon-btn"
+                onClick={() => handleCopy(resultLang)}
+                aria-label="Скопировать расчет"
+                title="Скопировать"
+              >
+                <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+                  <path
+                    d="M9 9h10v12H9zM5 3h10v2H7v10H5z"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.7"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </button>
+            </div>
           </div>
 
           <ul>
             {lines.map((line, index) => (
               <li key={`${line.productName}-${index}`}>
                 <span className="line-label">
-                  <span>{line.productName}</span>
-                  <span className="line-category">{line.categoryName}</span>
+                  <span>{translateProductName(line.productName, resultLang)}</span>
+                  <span className="line-category">
+                    {translateCategoryName(line.categoryName, resultLang)}
+                  </span>
                 </span>
                 <span className="line-meta">
                   <span className="line-qty">x {line.quantity}</span>
@@ -176,18 +198,34 @@ export function CalcScreen({
           </ul>
 
           <div className="total-row">
-            <span>Всего</span>
+            <span>{totalLabel}</span>
             <strong>{formatMoney(total, currencyAbbr)}</strong>
           </div>
 
           <button className="ui-btn ui-btn--primary main-btn save-btn" onClick={handleSaveCalculation}>
-            Сохранить
+            {saveLabel}
           </button>
         </article>
       )}
 
       {saveMessage && <p className="status">{saveMessage}</p>}
       {copyMessage && <p className="status">{copyMessage}</p>}
+      {showSaveSuccess && (
+        <div key={saveSuccessToken} className="save-success-overlay" aria-hidden="true">
+          <div className="save-success-circle">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path
+                d="M6 12.5l4.2 4.2L18 9"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </div>
+        </div>
+      )}
     </section>
   );
 }

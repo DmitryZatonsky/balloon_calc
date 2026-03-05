@@ -34,6 +34,8 @@ export type SavedCalculation = {
 
 export type Screen = "home" | "calc" | "archive" | "add" | "price";
 
+export type ResultLanguage = "ru" | "ua";
+
 export type DraftProduct = {
   id: string;
   name: string;
