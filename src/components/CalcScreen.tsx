@@ -161,10 +161,14 @@ export function CalcScreen({
           <ul>
             {lines.map((line, index) => (
               <li key={`${line.productName}-${index}`}>
-                <span>
-                  {line.productName} x {line.quantity}
+                <span className="line-label">
+                  <span>{line.productName}</span>
+                  <span className="line-category">{line.categoryName}</span>
                 </span>
-                <strong>{formatMoney(line.lineTotal)}</strong>
+                <span className="line-meta">
+                  <span className="line-qty">x {line.quantity}</span>
+                  <strong>{formatMoney(line.lineTotal)}</strong>
+                </span>
               </li>
             ))}
           </ul>
