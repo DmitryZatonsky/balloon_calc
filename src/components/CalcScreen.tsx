@@ -17,6 +17,7 @@ type Props = {
   resetCalc: () => void;
   lines: CalculationLine[];
   total: number;
+  currencyAbbr: string;
   handleCopy: () => Promise<void>;
   handleSaveCalculation: () => void;
   saveMessage: string;
@@ -40,6 +41,7 @@ export function CalcScreen({
   resetCalc,
   lines,
   total,
+  currencyAbbr,
   handleCopy,
   handleSaveCalculation,
   saveMessage,
@@ -75,7 +77,7 @@ export function CalcScreen({
                         <span>
                           {product.priceMode === "custom"
                             ? "Введите сумму"
-                            : formatMoney(product.price)}
+                            : formatMoney(product.price, currencyAbbr)}
                         </span>
                       </div>
 
@@ -167,7 +169,7 @@ export function CalcScreen({
                 </span>
                 <span className="line-meta">
                   <span className="line-qty">x {line.quantity}</span>
-                  <strong>{formatMoney(line.lineTotal)}</strong>
+                  <strong>{formatMoney(line.lineTotal, currencyAbbr)}</strong>
                 </span>
               </li>
             ))}
@@ -175,7 +177,7 @@ export function CalcScreen({
 
           <div className="total-row">
             <span>Всего</span>
-            <strong>{formatMoney(total)}</strong>
+            <strong>{formatMoney(total, currencyAbbr)}</strong>
           </div>
 
           <button className="ui-btn ui-btn--primary main-btn save-btn" onClick={handleSaveCalculation}>

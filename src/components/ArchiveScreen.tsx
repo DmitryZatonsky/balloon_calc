@@ -6,6 +6,7 @@ type Props = {
   sortedArchive: SavedCalculation[];
   expandedArchiveId: string | null;
   setExpandedArchiveId: Dispatch<SetStateAction<string | null>>;
+  currencyAbbr: string;
   handleEditCalculation: (record: SavedCalculation) => void;
   handleDeleteCalculation: (id: string) => void;
   renderHeader: (title: string) => React.ReactNode;
@@ -15,6 +16,7 @@ export function ArchiveScreen({
   sortedArchive,
   expandedArchiveId,
   setExpandedArchiveId,
+  currencyAbbr,
   handleEditCalculation,
   handleDeleteCalculation,
   renderHeader,
@@ -39,7 +41,7 @@ export function ArchiveScreen({
                 <div className="archive-top">
                   <div className="archive-meta">
                     <strong>{new Date(record.createdAt).toLocaleString("ru-RU")}</strong>
-                    <span>{formatMoney(record.total)}</span>
+                    <span>{formatMoney(record.total, currencyAbbr)}</span>
                   </div>
 
                   <div className="archive-actions">
@@ -95,17 +97,17 @@ export function ArchiveScreen({
                           <span>{line.productName}</span>
                           <span className="line-category">{line.categoryName}</span>
                         </span>
-                        <span className="line-meta">
-                          <span className="line-qty">x {line.quantity}</span>
-                          <strong>{formatMoney(line.lineTotal)}</strong>
-                        </span>
+                          <span className="line-meta">
+                            <span className="line-qty">x {line.quantity}</span>
+                            <strong>{formatMoney(line.lineTotal, currencyAbbr)}</strong>
+                          </span>
                       </li>
                     ))}
                   </ul>
 
                   <div className="total-row">
                     <span>Всего</span>
-                    <strong>{formatMoney(record.total)}</strong>
+                    <strong>{formatMoney(record.total, currencyAbbr)}</strong>
                   </div>
                 </div>
               </article>

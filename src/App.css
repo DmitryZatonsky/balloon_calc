@@ -1,6 +1,6 @@
 .app-shell {
   width: 100%;
-  min-height: 100vh;
+  min-height: 100svh;
   padding: 24px 16px;
   display: flex;
   justify-content: center;
@@ -296,16 +296,21 @@ h3 {
 }
 
 .product-row {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 10px;
   padding: 8px 0;
-  border-top: 1px solid var(--border);
 }
 
-.product-row:first-child {
-  border-top: none;
+.product-row + .product-row::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: -5px;
+  border-top: 1px solid var(--border);
 }
 
 .product-info {
@@ -569,6 +574,22 @@ h3 {
   color: var(--text-muted);
 }
 
+.currency-setting-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-left: 12px;
+  margin-top: -2px;
+  margin-bottom: 4px;
+}
+
+.currency-abbr-input {
+  margin-left: auto;
+  width: 55px;
+  max-width: 55px;
+  text-align: center;
+}
+
 .ui-input,
 .field input,
 .draft-row input {
@@ -629,35 +650,189 @@ h3 {
 }
 
 .user-categories {
-  margin-top: 14px;
-  padding-top: 10px;
-  border-top: 1px solid var(--border);
+  margin-top: 16px;
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--bg-surface);
+  box-shadow: 0 6px 14px rgba(31, 47, 57, 0.08);
 }
 
-.user-categories h3 {
-  font-size: 16px;
-  margin-bottom: 8px;
+.price-manager-card {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--bg-card);
+  overflow: hidden;
+}
+
+.price-manager-toggle {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border: none;
+  border-radius: 0;
+  padding: 12px 14px;
+}
+
+.price-manager-toggle span {
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.price-manager-chevron {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s ease;
+}
+
+.price-manager-chevron.is-open {
+  transform: rotate(180deg);
+}
+
+.price-manager-body {
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  pointer-events: none;
+  transform: translateY(-6px);
+  transition:
+    max-height 0.3s ease,
+    opacity 0.2s ease,
+    transform 0.25s ease,
+    padding 0.25s ease;
+}
+
+.price-manager-body.is-open {
+  max-height: 1200px;
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+  padding: 0 10px 10px;
 }
 
 .user-categories-list {
   display: grid;
-  gap: 8px;
+  gap: 6px;
 }
 
-.user-category-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  padding: 8px 10px;
+.manage-category {
   border: 1px solid var(--border);
   border-radius: 10px;
   background: var(--bg-card);
+  overflow: hidden;
 }
 
-.user-category-row span {
-  font-size: 14px;
+.manage-category-head {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 8px;
+  padding-right: 12px;
+}
+
+.manage-category-btn {
+  flex: 1;
+  border: none;
+  border-radius: 0;
+  min-height: 44px;
+  padding: 10px 12px;
+}
+
+.manage-category-btn span,
+.currency-setting-label {
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.2;
   color: var(--text-main);
+}
+
+.manage-category-head .icon-action-btn {
+  flex: 0 0 auto;
+  margin-right: 0;
+}
+
+.manage-product-row {
+  padding-right: 0;
+}
+
+.manage-products {
+  padding: 0 12px;
+}
+
+.manage-products.is-open {
+  padding: 0 12px 10px;
+}
+
+.price-manager-list .icon-action-btn.danger {
+  width: 36px;
+  height: 36px;
+  min-height: 36px;
+  border-radius: 12px;
+}
+
+.manage-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.manage-inline-price-input {
+  width: 55px;
+  min-height: 36px;
+  height: 36px;
+  padding: 0 6px;
+  text-align: center;
+}
+
+.manage-inline-price-input::placeholder {
+  text-align: center;
+}
+
+.manage-actions .ui-icon-btn {
+  width: 36px;
+  height: 36px;
+  min-height: 36px;
+  border-radius: 12px;
+}
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(17, 24, 31, 0.38);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 14px;
+}
+
+.modal-card {
+  width: min(420px, 100%);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  box-shadow: 0 18px 30px rgba(31, 47, 57, 0.24);
+  padding: 14px;
+  display: grid;
+  gap: 10px;
+}
+
+.modal-card h3 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.modal-card p {
+  margin: 0;
+  color: var(--text-muted);
+}
+
+.modal-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
 }
 
 @media (max-width: 680px) {

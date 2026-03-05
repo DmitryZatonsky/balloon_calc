@@ -1,7 +1,7 @@
 import type { DraftProduct } from "./types";
 
-export function formatMoney(value: number): string {
-  return `${value.toLocaleString("ru-RU")} грн`;
+export function formatMoney(value: number, currencyAbbr: string = "грн"): string {
+  return `${value.toLocaleString("ru-RU")} ${currencyAbbr}`;
 }
 
 function pad(value: number): string {

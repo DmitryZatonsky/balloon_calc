@@ -1,6 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { Category, DraftProduct, PriceData, Product, SavedCalculation, Screen } from "../types";
-import { buildIdFromDate, createDraftProduct, readArrayFromStorage, writeToStorage } from "../utils";
+import {
+  buildIdFromDate,
+  buildItemKey,
+  createDraftProduct,
+  readArrayFromStorage,
+  writeToStorage,
+} from "../utils";
 import { useArchive } from "./useArchive";
 import { useCalcEngine } from "./useCalcEngine";
 
@@ -9,6 +15,13 @@ const PRICE_FILE = `${BASE_URL}price.json`;
 const DATA_FILE = `${BASE_URL}data.json`;
 const CALCULATIONS_KEY = "balloon_calc_calculations";
 const EXTRA_CATEGORIES_KEY = "balloon_calc_extra_categories";
+const EXTRA_PRODUCTS_KEY = "balloon_calc_extra_products_by_category";
+const HIDDEN_CATEGORY_IDS_KEY = "balloon_calc_hidden_category_ids";
+const HIDDEN_PRODUCT_IDS_KEY = "balloon_calc_hidden_product_ids_by_category";
+const PRICE_OVERRIDES_KEY = "balloon_calc_price_overrides";
+const CURRENCY_ABBR_KEY = "balloon_calc_currency_abbr";
+const DELIVERY_CATEGORY_ID = "delivery";
+const DELIVERY_PRODUCT_ID = "delivery-custom";
 
 export function useBalloonCalc() {
   const [screen, setScreenState] = useState<Screen>("home");
@@ -16,12 +29,20 @@ export function useBalloonCalc() {
   const forwardStackRef = useRef<Screen[]>([]);
   const [priceData, setPriceData] = useState<PriceData>({ categories: [] });
   const [extraCategories, setExtraCategories] = useState<Category[]>([]);
+  const [extraProductsByCategory, setExtraProductsByCategory] = useState<Record<string, Product[]>>({});
+  const [hiddenCategoryIds, setHiddenCategoryIds] = useState<string[]>([]);
+  const [hiddenProductIdsByCategory, setHiddenProductIdsByCategory] = useState<
+    Record<string, string[]>
+  >({});
+  const [priceOverrides, setPriceOverrides] = useState<Record<string, number>>({});
+  const [currencyAbbr, setCurrencyAbbr] = useState<string>("грн");
 
   const [saveMessage, setSaveMessage] = useState<string>("");
   const [copyMessage, setCopyMessage] = useState<string>("");
   const [formMessage, setFormMessage] = useState<string>("");
 
   const [newCategoryName, setNewCategoryName] = useState<string>("");
+  const [targetCategoryId, setTargetCategoryId] = useState<string>("");
   const [draftProducts, setDraftProducts] = useState<DraftProduct[]>([createDraftProduct()]);
 
   const [openCategoryId, setOpenCategoryId] = useState<string | null>(null);
@@ -107,12 +128,72 @@ export function useBalloonCalc() {
   useEffect(() => {
     const localArchive = readArrayFromStorage<SavedCalculation>(CALCULATIONS_KEY);
     const localExtraCategories = readArrayFromStorage<Category>(EXTRA_CATEGORIES_KEY);
+    const rawExtraProducts = localStorage.getItem(EXTRA_PRODUCTS_KEY);
+    const rawHiddenCategoryIds = localStorage.getItem(HIDDEN_CATEGORY_IDS_KEY);
+    const rawHiddenProductIds = localStorage.getItem(HIDDEN_PRODUCT_IDS_KEY);
+    const rawPriceOverrides = localStorage.getItem(PRICE_OVERRIDES_KEY);
+    const rawCurrencyAbbr = localStorage.getItem(CURRENCY_ABBR_KEY);
 
     if (localArchive.length > 0) {
       archive.replaceArchive(localArchive);
     }
     if (localExtraCategories.length > 0) {
       setExtraCategories(localExtraCategories);
+    }
+    if (rawExtraProducts) {
+      try {
+        const parsed = JSON.parse(rawExtraProducts) as Record<string, Product[]>;
+        if (parsed && typeof parsed === "object") {
+          setExtraProductsByCategory(parsed);
+        }
+      } catch {
+        setExtraProductsByCategory({});
+      }
+    }
+    if (rawHiddenCategoryIds) {
+      try {
+        const parsed = JSON.parse(rawHiddenCategoryIds) as string[];
+        if (Array.isArray(parsed)) {
+          const next = parsed.filter((id) => typeof id === "string" && id !== DELIVERY_CATEGORY_ID);
+          setHiddenCategoryIds(next);
+          writeToStorage(HIDDEN_CATEGORY_IDS_KEY, next);
+        }
+      } catch {
+        setHiddenCategoryIds([]);
+      }
+    }
+    if (rawHiddenProductIds) {
+      try {
+        const parsed = JSON.parse(rawHiddenProductIds) as Record<string, string[]>;
+        if (parsed && typeof parsed === "object") {
+          const next = { ...parsed };
+          if (Array.isArray(next[DELIVERY_CATEGORY_ID])) {
+            next[DELIVERY_CATEGORY_ID] = next[DELIVERY_CATEGORY_ID].filter(
+              (id) => id !== DELIVERY_PRODUCT_ID,
+            );
+            if (next[DELIVERY_CATEGORY_ID].length === 0) {
+              delete next[DELIVERY_CATEGORY_ID];
+            }
+          }
+          setHiddenProductIdsByCategory(next);
+          writeToStorage(HIDDEN_PRODUCT_IDS_KEY, next);
+        }
+      } catch {
+        setHiddenProductIdsByCategory({});
+      }
+    }
+    if (rawPriceOverrides) {
+      try {
+        const parsed = JSON.parse(rawPriceOverrides) as Record<string, number>;
+        if (parsed && typeof parsed === "object") {
+          setPriceOverrides(parsed);
+        }
+      } catch {
+        setPriceOverrides({});
+      }
+    }
+    if (typeof rawCurrencyAbbr === "string" && rawCurrencyAbbr.trim().length > 0) {
+      setCurrencyAbbr(rawCurrencyAbbr.trim());
     }
   }, []);
 
@@ -129,10 +210,32 @@ export function useBalloonCalc() {
     return () => window.clearTimeout(timer);
   }, [calc.lines.length, screen, scrollToResultOnCalcOpen]);
 
-  const categories = useMemo(
-    () => [...priceData.categories, ...extraCategories],
-    [priceData.categories, extraCategories],
-  );
+  const categories = useMemo(() => {
+    const base = [...priceData.categories, ...extraCategories];
+    return base
+      .filter((category) => !hiddenCategoryIds.includes(category.id))
+      .map((category) => ({
+        ...category,
+        items: [...category.items, ...(extraProductsByCategory[category.id] ?? [])]
+          .filter((item) => !(hiddenProductIdsByCategory[category.id] ?? []).includes(item.id))
+          .map((item) => {
+            const key = buildItemKey(category.id, item.id);
+            const overriddenPrice = priceOverrides[key];
+            if (!Number.isFinite(overriddenPrice) || overriddenPrice <= 0) {
+              return item;
+            }
+            return { ...item, price: overriddenPrice };
+          }),
+      }))
+      .filter((category) => category.items.length > 0);
+  }, [
+    priceData.categories,
+    extraCategories,
+    extraProductsByCategory,
+    hiddenCategoryIds,
+    hiddenProductIdsByCategory,
+    priceOverrides,
+  ]);
 
   const productIndexByName = useMemo(() => {
     const index = new Map<string, { categoryId: string; product: Product }>();
@@ -153,11 +256,19 @@ export function useBalloonCalc() {
 
     const rows = calc.lines.map(
       (line) =>
-        `${line.productName} - ${line.quantity} x ${line.unitPrice} = ${line.lineTotal} грн`,
+        `${line.productName} - ${line.quantity} x ${line.unitPrice} = ${line.lineTotal} ${currencyAbbr}`,
     );
 
-    return `${rows.join("\n")}\nВсего: ${calc.total} грн`;
-  }, [calc.lines, calc.total]);
+    return `${rows.join("\n")}\nВсего: ${calc.total} ${currencyAbbr}`;
+  }, [calc.lines, calc.total, currencyAbbr]);
+
+  function updateCurrencyAbbr(nextValue: string): void {
+    const normalized = nextValue.trim();
+    const safeValue = normalized.length > 0 ? normalized.slice(0, 8) : "грн";
+    setCurrencyAbbr(safeValue);
+    localStorage.setItem(CURRENCY_ABBR_KEY, safeValue);
+    setFormMessage("Валюта обновлена.");
+  }
 
   function handleCalculate(): void {
     const result = calc.handleCalculate(categories);
@@ -222,13 +333,6 @@ export function useBalloonCalc() {
   }
 
   function saveCategory(): void {
-    const categoryName = newCategoryName.trim();
-
-    if (!categoryName) {
-      setFormMessage("Введите название категории.");
-      return;
-    }
-
     const cleanedItems = draftProducts
       .map((item) => ({
         id: item.id,
@@ -248,6 +352,41 @@ export function useBalloonCalc() {
 
     if (cleanedItems.length === 0) {
       setFormMessage("Добавьте хотя бы один товар с ценой.");
+      return;
+    }
+
+    if (targetCategoryId) {
+      const targetCategory = categories.find((category) => category.id === targetCategoryId);
+      if (!targetCategory) {
+        setFormMessage("Выбранная категория не найдена.");
+        return;
+      }
+
+      const itemsToAdd: Product[] = cleanedItems.map((item, index) => ({
+        id: `${item.id}-${Date.now()}-${index}`,
+        name: item.name,
+        price: item.priceMode === "custom" ? 0 : item.price,
+        priceMode: item.priceMode,
+      }));
+
+      setExtraProductsByCategory((prev) => {
+        const next = {
+          ...prev,
+          [targetCategoryId]: [...(prev[targetCategoryId] ?? []), ...itemsToAdd],
+        };
+        writeToStorage(EXTRA_PRODUCTS_KEY, next);
+        return next;
+      });
+
+      setDraftProducts([createDraftProduct()]);
+      setFormMessage(`Товары добавлены в категорию «${targetCategory.name}».`);
+      return;
+    }
+
+    const categoryName = newCategoryName.trim();
+
+    if (!categoryName) {
+      setFormMessage("Введите название категории.");
       return;
     }
 
@@ -281,9 +420,169 @@ export function useBalloonCalc() {
       return next;
     });
 
+    setExtraProductsByCategory((prev) => {
+      if (!(categoryId in prev)) {
+        return prev;
+      }
+      const next = { ...prev };
+      delete next[categoryId];
+      writeToStorage(EXTRA_PRODUCTS_KEY, next);
+      return next;
+    });
+
+    setHiddenCategoryIds((prev) => {
+      if (!prev.includes(categoryId)) {
+        return prev;
+      }
+      const next = prev.filter((id) => id !== categoryId);
+      writeToStorage(HIDDEN_CATEGORY_IDS_KEY, next);
+      return next;
+    });
+
+    setHiddenProductIdsByCategory((prev) => {
+      if (!(categoryId in prev)) {
+        return prev;
+      }
+      const next = { ...prev };
+      delete next[categoryId];
+      writeToStorage(HIDDEN_PRODUCT_IDS_KEY, next);
+      return next;
+    });
+
     calc.dropCategorySelections(categoryId);
     setOpenCategoryId((prev) => (prev === categoryId ? null : prev));
+    setTargetCategoryId((prev) => (prev === categoryId ? "" : prev));
     setFormMessage("Категория удалена.");
+  }
+
+  function deleteCategory(categoryId: string): void {
+    const isExtraCategory = extraCategories.some((category) => category.id === categoryId);
+    if (isExtraCategory) {
+      deleteExtraCategory(categoryId);
+      return;
+    }
+
+    setHiddenCategoryIds((prev) => {
+      if (prev.includes(categoryId)) {
+        return prev;
+      }
+      const next = [...prev, categoryId];
+      writeToStorage(HIDDEN_CATEGORY_IDS_KEY, next);
+      return next;
+    });
+
+    calc.dropCategorySelections(categoryId);
+    setOpenCategoryId((prev) => (prev === categoryId ? null : prev));
+    setTargetCategoryId((prev) => (prev === categoryId ? "" : prev));
+    setFormMessage("Категория удалена.");
+  }
+
+  function deleteProduct(categoryId: string, productId: string): void {
+    const isExtraCategory = extraCategories.some((category) => category.id === categoryId);
+    const existsInExtraProducts = (extraProductsByCategory[categoryId] ?? []).some(
+      (product) => product.id === productId,
+    );
+
+    if (isExtraCategory) {
+      setExtraCategories((prev) => {
+        const next = prev.map((category) =>
+          category.id === categoryId
+            ? { ...category, items: category.items.filter((item) => item.id !== productId) }
+            : category,
+        );
+        writeToStorage(EXTRA_CATEGORIES_KEY, next);
+        return next;
+      });
+    }
+
+    if (existsInExtraProducts) {
+      setExtraProductsByCategory((prev) => {
+        const current = prev[categoryId] ?? [];
+        const updated = current.filter((item) => item.id !== productId);
+        const next = { ...prev };
+        if (updated.length > 0) {
+          next[categoryId] = updated;
+        } else {
+          delete next[categoryId];
+        }
+        writeToStorage(EXTRA_PRODUCTS_KEY, next);
+        return next;
+      });
+    } else if (!isExtraCategory) {
+      setHiddenProductIdsByCategory((prev) => {
+        const current = prev[categoryId] ?? [];
+        if (current.includes(productId)) {
+          return prev;
+        }
+        const next = {
+          ...prev,
+          [categoryId]: [...current, productId],
+        };
+        writeToStorage(HIDDEN_PRODUCT_IDS_KEY, next);
+        return next;
+      });
+    }
+
+    calc.dropProductSelection(categoryId, productId);
+    setFormMessage("Товар удален.");
+  }
+
+  function updateProductPrice(categoryId: string, productId: string, nextPrice: number): void {
+    const normalizedPrice = Number.isFinite(nextPrice) ? Math.floor(nextPrice) : 0;
+    if (normalizedPrice <= 0) {
+      setFormMessage("Введите корректную цену.");
+      return;
+    }
+
+    const extraCategoryHasProduct = extraCategories.some(
+      (category) =>
+        category.id === categoryId && category.items.some((product) => product.id === productId),
+    );
+    const extraProductsHaveProduct = (extraProductsByCategory[categoryId] ?? []).some(
+      (product) => product.id === productId,
+    );
+
+    if (extraCategoryHasProduct) {
+      setExtraCategories((prev) => {
+        const next = prev.map((category) =>
+          category.id === categoryId
+            ? {
+                ...category,
+                items: category.items.map((item) =>
+                  item.id === productId ? { ...item, price: normalizedPrice } : item,
+                ),
+              }
+            : category,
+        );
+        writeToStorage(EXTRA_CATEGORIES_KEY, next);
+        return next;
+      });
+      setFormMessage("Цена обновлена.");
+      return;
+    }
+
+    if (extraProductsHaveProduct) {
+      setExtraProductsByCategory((prev) => {
+        const next = {
+          ...prev,
+          [categoryId]: (prev[categoryId] ?? []).map((item) =>
+            item.id === productId ? { ...item, price: normalizedPrice } : item,
+          ),
+        };
+        writeToStorage(EXTRA_PRODUCTS_KEY, next);
+        return next;
+      });
+      setFormMessage("Цена обновлена.");
+      return;
+    }
+
+    const key = buildItemKey(categoryId, productId);
+    setPriceOverrides((prev) => {
+      const next = { ...prev, [key]: normalizedPrice };
+      writeToStorage(PRICE_OVERRIDES_KEY, next);
+      return next;
+    });
+    setFormMessage("Цена обновлена.");
   }
 
   return {
@@ -302,8 +601,11 @@ export function useBalloonCalc() {
     total: calc.total,
     saveMessage,
     copyMessage,
+    currencyAbbr,
     newCategoryName,
     setNewCategoryName,
+    targetCategoryId,
+    setTargetCategoryId,
     draftProducts,
     setDraftProducts,
     formMessage,
@@ -322,5 +624,9 @@ export function useBalloonCalc() {
     resetCalc,
     saveCategory,
     deleteExtraCategory,
+    deleteCategory,
+    deleteProduct,
+    updateProductPrice,
+    updateCurrencyAbbr,
   };
 }

@@ -32,7 +32,7 @@ export type SavedCalculation = {
   total: number;
 };
 
-export type Screen = "home" | "calc" | "archive" | "add";
+export type Screen = "home" | "calc" | "archive" | "add" | "price";
 
 export type DraftProduct = {
   id: string;

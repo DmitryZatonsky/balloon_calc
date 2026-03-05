@@ -3,6 +3,7 @@ import { AddCategoryScreen } from "./components/AddCategoryScreen";
 import { ArchiveScreen } from "./components/ArchiveScreen";
 import { CalcScreen } from "./components/CalcScreen";
 import { HomeScreen } from "./components/HomeScreen";
+import { PriceManagerScreen } from "./components/PriceManagerScreen";
 import { useBalloonCalc } from "./hooks/useBalloonCalc";
 import { buildItemKey, keepDigits } from "./utils";
 import { useRef } from "react";
@@ -23,8 +24,11 @@ function App() {
     total,
     saveMessage,
     copyMessage,
+    currencyAbbr,
     newCategoryName,
     setNewCategoryName,
+    targetCategoryId,
+    setTargetCategoryId,
     draftProducts,
     setDraftProducts,
     formMessage,
@@ -32,7 +36,6 @@ function App() {
     sortedArchive,
     expandedArchiveId,
     setExpandedArchiveId,
-    extraCategories,
     activateItem,
     setQuantity,
     handleCalculate,
@@ -42,7 +45,10 @@ function App() {
     handleCopy,
     resetCalc,
     saveCategory,
-    deleteExtraCategory,
+    deleteCategory,
+    deleteProduct,
+    updateProductPrice,
+    updateCurrencyAbbr,
   } = useBalloonCalc();
 
   const gestureStartRef = useRef<{
@@ -142,6 +148,7 @@ function App() {
             resetCalc={resetCalc}
             lines={lines}
             total={total}
+            currencyAbbr={currencyAbbr}
             handleCopy={handleCopy}
             handleSaveCalculation={handleSaveCalculation}
             saveMessage={saveMessage}
@@ -156,6 +163,7 @@ function App() {
             sortedArchive={sortedArchive}
             expandedArchiveId={expandedArchiveId}
             setExpandedArchiveId={setExpandedArchiveId}
+            currencyAbbr={currencyAbbr}
             handleEditCalculation={handleEditCalculation}
             handleDeleteCalculation={handleDeleteCalculation}
             renderHeader={renderHeader}
@@ -164,14 +172,28 @@ function App() {
 
         {screen === "add" && (
           <AddCategoryScreen
+            categories={categories}
             newCategoryName={newCategoryName}
             setNewCategoryName={setNewCategoryName}
+            targetCategoryId={targetCategoryId}
+            setTargetCategoryId={setTargetCategoryId}
             draftProducts={draftProducts}
             setDraftProducts={setDraftProducts}
             saveCategory={saveCategory}
             formMessage={formMessage}
-            extraCategories={extraCategories}
-            deleteExtraCategory={deleteExtraCategory}
+            renderHeader={renderHeader}
+          />
+        )}
+
+        {screen === "price" && (
+          <PriceManagerScreen
+            categories={categories}
+            formMessage={formMessage}
+            currencyAbbr={currencyAbbr}
+            updateCurrencyAbbr={updateCurrencyAbbr}
+            deleteCategory={deleteCategory}
+            deleteProduct={deleteProduct}
+            updateProductPrice={updateProductPrice}
             renderHeader={renderHeader}
           />
         )}

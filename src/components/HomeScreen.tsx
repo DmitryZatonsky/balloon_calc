@@ -75,6 +75,27 @@ export function HomeScreen({ setScreen }: Props) {
             </div>
           </div>
         </button>
+
+        <button className="menu-card menu-card--mint" onClick={() => setScreen("price")}>
+          <div className="menu-card__head">
+            <span className="menu-card__icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="16" height="16">
+                <path
+                  d="M11 4l8 8-7 7-8-8V4zM14.5 8.5h.01"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.8"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </span>
+            <div className="menu-card__text">
+              <span className="menu-card__title">Управление прайсом</span>
+              <span className="menu-card__desc">Изменение цен и удаление позиций</span>
+            </div>
+          </div>
+        </button>
       </div>
 
       <p className="small-note">Сохранения хранятся локально на этом устройстве.</p>

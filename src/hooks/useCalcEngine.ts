@@ -137,6 +137,26 @@ export function useCalcEngine() {
     );
   }
 
+  function dropProductSelection(categoryId: string, productId: string): void {
+    const key = buildItemKey(categoryId, productId);
+    setQuantities((prev) => {
+      if (!(key in prev)) {
+        return prev;
+      }
+      const next = { ...prev };
+      delete next[key];
+      return next;
+    });
+    setCustomAmounts((prev) => {
+      if (!(key in prev)) {
+        return prev;
+      }
+      const next = { ...prev };
+      delete next[key];
+      return next;
+    });
+  }
+
   return {
     quantities,
     customAmounts,
@@ -149,5 +169,6 @@ export function useCalcEngine() {
     resetCalc,
     applyArchivedRecord,
     dropCategorySelections,
+    dropProductSelection,
   };
 }
