@@ -4,8 +4,9 @@ import { buildIdFromDate, createDraftProduct, readArrayFromStorage, writeToStora
 import { useArchive } from "./useArchive";
 import { useCalcEngine } from "./useCalcEngine";
 
-const PRICE_FILE = "/price.json";
-const DATA_FILE = "/data.json";
+const BASE_URL = import.meta.env.BASE_URL;
+const PRICE_FILE = `${BASE_URL}price.json`;
+const DATA_FILE = `${BASE_URL}data.json`;
 const CALCULATIONS_KEY = "balloon_calc_calculations";
 const EXTRA_CATEGORIES_KEY = "balloon_calc_extra_categories";
 
