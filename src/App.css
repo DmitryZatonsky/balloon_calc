@@ -262,6 +262,12 @@ h3 {
   padding: 12px 14px;
 }
 
+.category-btn span {
+  font-size: clamp(18px, 4.8vw, 20px);
+  font-weight: 700;
+  line-height: 1.2;
+}
+
 .products {
   margin-top: 0;
   background: transparent;
@@ -307,9 +313,16 @@ h3 {
   gap: 3px;
 }
 
+.product-info strong {
+  font-size: clamp(15px, 3.9vw, 16px);
+  font-weight: 600;
+  line-height: 1.2;
+}
+
 .product-info span {
   color: var(--text-muted);
-  font-size: 13px;
+  font-size: 14px;
+  line-height: 1.25;
 }
 
 .qty-add {
