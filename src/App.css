@@ -262,7 +262,21 @@ h3 {
   padding: 12px 14px;
 }
 
-.category-btn span {
+.category-btn__content {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.category-btn__icon {
+  width: 18px;
+  height: 18px;
+  color: #315a66;
+  flex: 0 0 18px;
+}
+
+.category-btn__label {
   font-size: clamp(18px, 4.8vw, 20px);
   font-weight: 700;
   line-height: 1.2;
@@ -752,12 +766,19 @@ h3 {
   padding: 10px 12px;
 }
 
-.manage-category-btn span,
+.manage-category-btn .category-btn__label,
 .currency-setting-label {
   font-size: 15px;
   font-weight: 600;
   line-height: 1.2;
   color: var(--text-main);
+}
+
+.manage-category-btn .category-btn__icon {
+  width: 16px;
+  height: 16px;
+  color: #45616e;
+  flex-basis: 16px;
 }
 
 .manage-category-head .icon-action-btn {

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import type { Category } from "../types";
 import { keepDigits } from "../utils";
+import { CategoryIcon } from "./CategoryIcon";
 
 type Props = {
   categories: Category[];
@@ -113,8 +114,15 @@ export function PriceManagerPanel({
                   onClick={() => toggleManagedCategory(category.id)}
                   aria-expanded={isOpen}
                 >
-                  <span>
-                    {category.name} ({category.items.length})
+                  <span className="category-btn__content">
+                    <CategoryIcon
+                      categoryId={category.id}
+                      categoryName={category.name}
+                      className="category-btn__icon"
+                    />
+                    <span className="category-btn__label">
+                      {category.name} ({category.items.length})
+                    </span>
                   </span>
                 </button>
                 <button

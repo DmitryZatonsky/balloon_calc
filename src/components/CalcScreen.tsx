@@ -2,6 +2,7 @@ import { useState } from "react";
 import type { Dispatch, RefObject, SetStateAction } from "react";
 import type { Category, CalculationLine, Product, ResultLanguage } from "../types";
 import { formatMoney, translateCategoryName, translateProductName } from "../utils";
+import { CategoryIcon } from "./CategoryIcon";
 
 type Props = {
   categories: Category[];
@@ -73,7 +74,14 @@ export function CalcScreen({
                 className="ui-btn ui-btn--ghost category-btn"
                 onClick={() => setOpenCategoryId(isOpen ? null : category.id)}
               >
-                <span>{category.name}</span>
+                <span className="category-btn__content">
+                  <CategoryIcon
+                    categoryId={category.id}
+                    categoryName={category.name}
+                    className="category-btn__icon"
+                  />
+                  <span className="category-btn__label">{category.name}</span>
+                </span>
               </button>
 
               <div className={`products ${isOpen ? "is-open" : ""}`} aria-hidden={!isOpen}>
