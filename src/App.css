@@ -259,21 +259,21 @@ h3 {
 .category-btn {
   border: none;
   background: transparent;
-  padding: 12px 14px;
+  padding: 8px 10px;
 }
 
 .category-btn__content {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   width: 100%;
 }
 
 .category-btn__icon {
-  width: 20px;
-  height: 20px;
+  width: 24px;
+  height: 24px;
   color: #1f4f56;
-  flex: 0 0 20px;
+  flex: 0 0 24px;
   display: block;
   stroke: currentColor;
   stroke-linecap: round;
@@ -767,7 +767,7 @@ h3 {
   border: none;
   border-radius: 0;
   min-height: 44px;
-  padding: 10px 12px;
+  padding: 8px 10px;
 }
 
 .manage-category-btn .category-btn__label,
@@ -779,10 +779,10 @@ h3 {
 }
 
 .manage-category-btn .category-btn__icon {
-  width: 18px;
-  height: 18px;
+  width: 24px;
+  height: 24px;
   color: #2e5662;
-  flex-basis: 18px;
+  flex-basis: 24px;
 }
 
 .manage-category-head .icon-action-btn {
