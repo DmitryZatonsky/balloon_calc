@@ -2,6 +2,7 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import { type ManifestOptions, VitePWA } from "vite-plugin-pwa";
 
+
 const manifest:  Partial<ManifestOptions> | false = {
   theme_color: "#8936FF",
   background_color: "#2EC6FE",
@@ -43,6 +44,7 @@ const manifest:  Partial<ManifestOptions> | false = {
 
 // https://vite.dev/config/
 export default defineConfig({
+  base: "/balloon_calc/",
   plugins: [
     react(),
     VitePWA({
@@ -51,6 +53,9 @@ export default defineConfig({
         globPatterns: ["**/*.{html,css,js,ico,png,svg}"],
       },
       manifest: manifest,
+      
     }),
   ],
 });
+
+
