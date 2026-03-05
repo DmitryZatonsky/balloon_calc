@@ -3,12 +3,19 @@ import { AddCategoryScreen } from "./components/AddCategoryScreen";
 import { ArchiveScreen } from "./components/ArchiveScreen";
 import { CalcScreen } from "./components/CalcScreen";
 import { HomeScreen } from "./components/HomeScreen";
+import { OnboardingOverlay } from "./components/OnboardingOverlay";
 import { PriceManagerScreen } from "./components/PriceManagerScreen";
 import { useBalloonCalc } from "./hooks/useBalloonCalc";
 import { buildItemKey, keepDigits } from "./utils";
-import { useRef } from "react";
+import { useRef, useState } from "react";
+
+const ONBOARDING_KEY = "balloon_calc_onboarding_seen";
 
 function App() {
+  const [showOnboarding, setShowOnboarding] = useState<boolean>(() => {
+    return localStorage.getItem(ONBOARDING_KEY) !== "1";
+  });
+
   const {
     screen,
     setScreen,
@@ -63,6 +70,9 @@ function App() {
   } | null>(null);
 
   function handleTouchStart(event: React.TouchEvent<HTMLDivElement>): void {
+    if (showOnboarding) {
+      return;
+    }
     const touch = event.touches[0];
     const width = window.innerWidth;
     const edgeZone = 32;
@@ -81,6 +91,9 @@ function App() {
   }
 
   function handleTouchEnd(event: React.TouchEvent<HTMLDivElement>): void {
+    if (showOnboarding) {
+      return;
+    }
     if (!gestureStartRef.current || !gestureStartRef.current.edge) {
       return;
     }
@@ -130,6 +143,11 @@ function App() {
         <span className="header-spacer" aria-hidden="true" />
       </header>
     );
+  }
+
+  function finishOnboarding(): void {
+    localStorage.setItem(ONBOARDING_KEY, "1");
+    setShowOnboarding(false);
   }
 
   return (
@@ -223,6 +241,7 @@ function App() {
           </div>
         )}
       </div>
+      {showOnboarding && <OnboardingOverlay onFinish={finishOnboarding} />}
     </div>
   );
 }

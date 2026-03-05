@@ -899,7 +899,7 @@ h3 {
 }
 
 .modal-card {
-  width: 300px;
+  width: min(420px, 100%);
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: 14px;
@@ -907,6 +907,8 @@ h3 {
   padding: 14px;
   display: grid;
   gap: 10px;
+  justify-items: center;
+  text-align: center;
 }
 
 .modal-card h3 {
@@ -917,12 +919,111 @@ h3 {
 .modal-card p {
   margin: 0;
   color: var(--text-muted);
+  max-width: 34ch;
 }
 
 .modal-actions {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   gap: 8px;
+  width: 100%;
+}
+
+.modal-actions .ui-btn {
+  width: 100%;
   justify-content: center;
+  display: inline-flex;
+  align-items: center;
+}
+
+.onboarding-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10030;
+  background: rgba(17, 24, 31, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 14px;
+}
+
+.onboarding-card {
+  width: min(420px, 100%);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  box-shadow: 0 20px 38px rgba(31, 47, 57, 0.28);
+  padding: 16px;
+  display: grid;
+  gap: 12px;
+  justify-items: center;
+  text-align: center;
+}
+
+.onboarding-card h3 {
+  margin: 0;
+  font-size: 22px;
+}
+
+.onboarding-card p {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 15px;
+  line-height: 1.4;
+  max-width: 34ch;
+}
+
+.onboarding-icon-wrap {
+  width: 56px;
+  height: 56px;
+  border-radius: 14px;
+  background: var(--bg-soft);
+  color: var(--bg-dark);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.onboarding-icon-wrap svg {
+  width: 28px;
+  height: 28px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.onboarding-dots {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.onboarding-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: #c4ccd3;
+}
+
+.onboarding-dot.is-active {
+  width: 20px;
+  background: var(--bg-dark);
+}
+
+.onboarding-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  width: 100%;
+}
+
+.onboarding-actions .ui-btn {
+  width: 100%;
+  justify-content: center;
+  display: inline-flex;
+  align-items: center;
 }
 
 .save-success-overlay {
