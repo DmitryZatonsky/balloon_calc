@@ -322,7 +322,7 @@ h3 {
   background: transparent;
   border-radius: 12px;
   display: grid;
-  gap: 10px;
+  gap: 0px;
   max-height: 0;
   opacity: 0;
   overflow: hidden;
@@ -358,7 +358,7 @@ h3 {
   position: absolute;
   left: 0;
   right: 0;
-  top: -5px;
+  top: 0;
   border-top: 1px solid var(--border);
 }
 
@@ -745,6 +745,7 @@ h3 {
   display: grid;
   gap: 8px;
   padding: 6px 0 0;
+  justify-content: center;
 }
 
 .custom-figure-row {
@@ -752,6 +753,8 @@ h3 {
   grid-template-columns: 1fr 120px 44px;
   gap: 8px;
   align-items: center;
+  width: min(100%, 360px);
+  margin: 0 auto;
 }
 
 .custom-figure-name {
