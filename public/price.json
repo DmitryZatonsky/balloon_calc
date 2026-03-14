@@ -38,10 +38,39 @@
       "id": "foil",
       "name": "Фольга",
       "items": [
-        { "id": "foil-heart-45", "name": "Сердца 45 см", "price": 150 },
-        { "id": "foil-heart-70", "name": "Сердца 70 см", "price": 600 },
-        { "id": "foil-heart-90", "name": "Сердца 90 см", "price": 750 },
-        { "id": "foil-number-no-decor", "name": "Цифры без декора", "price": 450 },
+        {
+          "id": "foil-45",
+          "name": "Фольга 45 см",
+          "items": [
+            { "id": "foil-45-heart", "name": "Сердце 45 см", "price": 150 },
+            { "id": "foil-45-star", "name": "Звезда 45 см", "price": 150 },
+            { "id": "foil-45-circle", "name": "Круг 45 см", "price": 150 },
+            { "id": "foil-45-paint", "name": "С рисунком 45 см", "price": 220 }
+          ]
+        },
+        {
+          "id": "foil-70",
+          "name": "Фольга 70 см",
+          "items": [
+            { "id": "foil-70-heart", "name": "Сердце 70 см", "price": 600 },
+            { "id": "foil-70-star", "name": "Звезда 70 см", "price": 600 },
+            { "id": "foil-70-circle", "name": "Круг 70 см", "price": 600 }
+          ]
+        },
+        {
+          "id": "foil-90",
+          "name": "Фольга 90 см",
+          "items": [
+            { "id": "foil-90-heart", "name": "Сердце 90 см", "price": 750 },
+            { "id": "foil-90-star", "name": "Звезда 90 см", "price": 750 },
+            { "id": "foil-90-circle", "name": "Круг 90 см", "price": 750 }
+          ]
+        },
+        {
+          "id": "foil-number-no-decor",
+          "name": "Цифры без декора",
+          "price": 450
+        },
         { "id": "foil-number-decor", "name": "Цифры с декором", "price": 550 }
       ]
     },
@@ -49,7 +78,13 @@
       "id": "figures",
       "name": "Фигуры",
       "items": [
-        { "id": "fig-custom", "name": "", "nameMode": "custom", "price": 0, "priceMode": "custom" }
+        {
+          "id": "fig-custom",
+          "name": "",
+          "nameMode": "custom",
+          "price": 0,
+          "priceMode": "custom"
+        }
       ]
     },
     {
@@ -81,13 +116,25 @@
       "items": [
         { "id": "extra-photo", "name": "Фото", "price": 300 },
         { "id": "extra-packages", "name": "Пакеты", "price": 25 },
-        { "id": "extra-title", "name": "Надпись", "price": 0, "priceMode": "custom" }
+        {
+          "id": "extra-title",
+          "name": "Надпись",
+          "price": 0,
+          "priceMode": "custom"
+        }
       ]
     },
     {
       "id": "delivery",
       "name": "Доставка",
-      "items": [{ "id": "delivery-custom", "name": "Доставка", "price": 0, "priceMode": "custom" }]
+      "items": [
+        {
+          "id": "delivery-custom",
+          "name": "Доставка",
+          "price": 0,
+          "priceMode": "custom"
+        }
+      ]
     }
   ]
 }

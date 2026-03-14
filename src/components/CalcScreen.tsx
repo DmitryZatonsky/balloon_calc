@@ -7,7 +7,7 @@ import type {
   Product,
   ResultLanguage,
 } from "../types";
-import { formatMoney, translateCategoryName, translateProductName } from "../utils";
+import { formatMoney, translateCategoryName, translateProductName, getProducts } from "../utils";
 import { CategoryIcon } from "./CategoryIcon";
 
 type Props = {
@@ -74,7 +74,6 @@ export function CalcScreen({
   return (
     <section className="screen calc">
       {renderHeader("Категории")}
-
       <div className="category-list">
         {categories.map((category) => {
           const isOpen = openCategoryId === category.id;
@@ -107,13 +106,15 @@ export function CalcScreen({
                     </button>
                   </div>
                 )}
-                {category
-                  .items
+                {getProducts(category)
                   .filter((product) => product.id !== "fig-custom")
                   .map((product) => {
                   const key = buildItemKey(category.id, product.id);
                   const qty = quantities[key] ?? 0;
 
+// {console.log(category.id);}
+// {console.log(quantities[key]);}
+console.log(categories)
                   return (
                     <div key={product.id} className="product-row">
                       <div className="product-info">

@@ -1,7 +1,9 @@
-import type { DraftProduct, ResultLanguage } from "./types";
+import type { DraftProduct, ResultLanguage, Category, Product } from "./types";
 
-export function formatMoney(value: number, currencyAbbr: string = "грн"): string {
-  return `${value.toLocaleString("ru-RU")} ${currencyAbbr}`;
+export function formatMoney(value: number | undefined, currency: string) {
+  if (typeof value !== "number") return ""
+
+  return value.toLocaleString("ru-RU") + " " + currency
 }
 
 function pad(value: number): string {
@@ -44,6 +46,27 @@ export function readArrayFromStorage<T>(key: string): T[] {
 
 export function writeToStorage(key: string, value: unknown): void {
   localStorage.setItem(key, JSON.stringify(value));
+}
+
+export function getProducts(category: Category): Product[] {
+  const products: Product[] = []
+
+  if (!Array.isArray(category.items)) return products
+
+  for (const item of category.items) {
+
+    // это товар
+    if ("price" in item || "priceMode" in item) {
+      products.push(item as Product)
+    }
+
+    // это подкатегория
+    else if ("items" in item) {
+      products.push(...getProducts(item as Category))
+    }
+  }
+
+  return products
 }
 
 export function translateCategoryName(categoryName: string, lang: ResultLanguage): string {

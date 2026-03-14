@@ -1,18 +1,32 @@
 import { useState } from "react";
-import type { Category, CalculationLine, CustomFigureRow, Product, SavedCalculation } from "../types";
-import { buildItemKey } from "../utils";
+import type {
+  Category,
+  CalculationLine,
+  CustomFigureRow,
+  Product,
+  SavedCalculation,
+} from "../types";
+import { buildItemKey, getProducts } from "../utils";
 
 type ProductIndex = Map<string, { categoryId: string; product: Product }>;
 
 export function useCalcEngine() {
   const [quantities, setQuantities] = useState<Record<string, number>>({});
-  const [customAmounts, setCustomAmounts] = useState<Record<string, string>>({});
+  const [customAmounts, setCustomAmounts] = useState<Record<string, string>>(
+    {},
+  );
   const [lines, setLines] = useState<CalculationLine[]>([]);
   const [total, setTotal] = useState<number>(0);
 
-  function setQuantity(categoryId: string, productId: string, nextValue: number): void {
+  function setQuantity(
+    categoryId: string,
+    productId: string,
+    nextValue: number,
+  ): void {
     const key = buildItemKey(categoryId, productId);
-    const normalized = Number.isFinite(nextValue) ? Math.max(0, Math.floor(nextValue)) : 0;
+    const normalized = Number.isFinite(nextValue)
+      ? Math.max(0, Math.floor(nextValue))
+      : 0;
 
     setQuantities((prev) => {
       const next = { ...prev };
@@ -50,51 +64,66 @@ export function useCalcEngine() {
     }
   }
 
-function buildCalculation(
-  categories: Category[],
-  customRows: CustomFigureRow[] = [],
-): { lines: CalculationLine[]; total: number } {
-  const nextLines: CalculationLine[] = [];
-  let nextTotal = 0;
+  function buildCalculation(
+    categories: Category[],
+    customRows: CustomFigureRow[] = [],
+  ): { lines: CalculationLine[]; total: number } {
+    const nextLines: CalculationLine[] = [];
+    let nextTotal = 0;
+
+function processCategory(category: Category) {
+
+  if (Array.isArray(category.items)) {
+    for (const product of getProducts(category)) {
+
+      const key = buildItemKey(category.id, product.id)
+      const qty = quantities[key] ?? 0
+
+      if (qty <= 0) continue
+
+      const isCustom = product.priceMode === "custom"
+      const customPrice = Number(customAmounts[key] ?? 0)
+      const normalizedQty = isCustom ? 1 : qty
+      const unitPrice = isCustom ? customPrice : product.price
+
+      if (!unitPrice || unitPrice <= 0) continue
+
+      const lineTotal = normalizedQty * unitPrice
+
+      nextTotal += lineTotal
+
+      nextLines.push({
+        categoryName: category.name,
+        productName: product.name,
+        quantity: normalizedQty,
+        unitPrice,
+        lineTotal,
+      })
+    }
+  }
+
+  if (Array.isArray(category.items)) {
+    for (const sub of category.items) {
+      processCategory(sub)
+    }
+  }
+}
 
     for (const category of categories) {
-      for (const product of category.items) {
-        const key = buildItemKey(category.id, product.id);
-        const qty = quantities[key] ?? 0;
-        if (qty <= 0) {
-          continue;
-        }
-
-        const isCustom = product.priceMode === "custom";
-        const customPrice = Number(customAmounts[key] ?? 0);
-        const normalizedQty = isCustom ? 1 : qty;
-        const unitPrice = isCustom ? customPrice : product.price;
-
-        if (unitPrice <= 0) {
-          continue;
-        }
-
-        const lineTotal = normalizedQty * unitPrice;
-        nextTotal += lineTotal;
-        nextLines.push({
-          categoryName: category.name,
-          productName: product.name,
-          quantity: normalizedQty,
-          unitPrice,
-          lineTotal,
-        });
-      }
+      processCategory(category);
     }
 
-    const figuresCategory = categories.find((category) => category.id === "figures");
+    const figuresCategory = categories.find(
+      (category) => category.id === "figures",
+    );
+
     const figuresLabel = figuresCategory ? figuresCategory.name : "Фигуры";
 
     for (const row of customRows) {
       const name = row.name.trim();
       const price = Number(row.price);
-      if (!name || !Number.isFinite(price) || price <= 0) {
-        continue;
-      }
+      if (!name || !Number.isFinite(price) || price <= 0) continue;
+
       const lineTotal = price;
       nextTotal += lineTotal;
       nextLines.push({
@@ -126,7 +155,10 @@ function buildCalculation(
     setTotal(0);
   }
 
-  function applyArchivedRecord(record: SavedCalculation, indexByName: ProductIndex): number {
+  function applyArchivedRecord(
+    record: SavedCalculation,
+    indexByName: ProductIndex,
+  ): number {
     const nextQuantities: Record<string, number> = {};
     const nextCustomAmounts: Record<string, string> = {};
     let matched = 0;
@@ -156,10 +188,18 @@ function buildCalculation(
 
   function dropCategorySelections(categoryId: string): void {
     setQuantities((prev) =>
-      Object.fromEntries(Object.entries(prev).filter(([key]) => !key.startsWith(`${categoryId}::`))),
+      Object.fromEntries(
+        Object.entries(prev).filter(
+          ([key]) => !key.startsWith(`${categoryId}::`),
+        ),
+      ),
     );
     setCustomAmounts((prev) =>
-      Object.fromEntries(Object.entries(prev).filter(([key]) => !key.startsWith(`${categoryId}::`))),
+      Object.fromEntries(
+        Object.entries(prev).filter(
+          ([key]) => !key.startsWith(`${categoryId}::`),
+        ),
+      ),
     );
   }
 

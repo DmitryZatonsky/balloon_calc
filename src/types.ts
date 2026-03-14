@@ -5,13 +5,13 @@ export type Product = {
   name: string;
   nameMode?: "custom";
   price: number;
-  priceMode?: PriceMode;
+  priceMode?: "custom";
 };
 
 export type Category = {
   id: string;
   name: string;
-  items: Product[];
+  items?: (Product | Category)[]
 };
 
 export type PriceData = {
