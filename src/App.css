@@ -669,7 +669,7 @@ h3 {
   background: var(--bg-card);
   padding: 10px 12px;
   font-size: 15px;
-  min-height: 48px;
+  min-height: 36px;
 }
 
 .draft-products {
