@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { Category, CalculationLine, Product, SavedCalculation } from "../types";
+import type { Category, CalculationLine, CustomFigureRow, Product, SavedCalculation } from "../types";
 import { buildItemKey } from "../utils";
 
 type ProductIndex = Map<string, { categoryId: string; product: Product }>;
@@ -50,9 +50,12 @@ export function useCalcEngine() {
     }
   }
 
-  function buildCalculation(categories: Category[]): { lines: CalculationLine[]; total: number } {
-    const nextLines: CalculationLine[] = [];
-    let nextTotal = 0;
+function buildCalculation(
+  categories: Category[],
+  customRows: CustomFigureRow[] = [],
+): { lines: CalculationLine[]; total: number } {
+  const nextLines: CalculationLine[] = [];
+  let nextTotal = 0;
 
     for (const category of categories) {
       for (const product of category.items) {
@@ -83,11 +86,34 @@ export function useCalcEngine() {
       }
     }
 
+    const figuresCategory = categories.find((category) => category.id === "figures");
+    const figuresLabel = figuresCategory ? figuresCategory.name : "Фигуры";
+
+    for (const row of customRows) {
+      const name = row.name.trim();
+      const price = Number(row.price);
+      if (!name || !Number.isFinite(price) || price <= 0) {
+        continue;
+      }
+      const lineTotal = price;
+      nextTotal += lineTotal;
+      nextLines.push({
+        categoryName: figuresLabel,
+        productName: name,
+        quantity: 1,
+        unitPrice: price,
+        lineTotal,
+      });
+    }
+
     return { lines: nextLines, total: nextTotal };
   }
 
-  function handleCalculate(categories: Category[]): { lines: CalculationLine[]; total: number } {
-    const result = buildCalculation(categories);
+  function handleCalculate(
+    categories: Category[],
+    customRows: CustomFigureRow[] = [],
+  ): { lines: CalculationLine[]; total: number } {
+    const result = buildCalculation(categories, customRows);
     setLines(result.lines);
     setTotal(result.total);
     return result;

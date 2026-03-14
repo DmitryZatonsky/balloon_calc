@@ -49,14 +49,7 @@
       "id": "figures",
       "name": "Фигуры",
       "items": [
-        { "id": "fig-xs", "name": "XS", "price": 300 },
-        { "id": "fig-s", "name": "S", "price": 350 },
-        { "id": "fig-m", "name": "M", "price": 450 },
-        { "id": "fig-l", "name": "L", "price": 500 },
-        { "id": "fig-xl", "name": "XL", "price": 650 },
-        { "id": "fig-walk-s", "name": "Ходячие S", "price": 1000 },
-        { "id": "fig-walk-m", "name": "Ходячие M", "price": 1500 },
-        { "id": "fig-walk-l", "name": "Ходячие L", "price": 1800 }
+        { "id": "fig-custom", "name": "", "nameMode": "custom", "price": 0, "priceMode": "custom" }
       ]
     },
     {

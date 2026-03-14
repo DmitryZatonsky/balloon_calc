@@ -60,6 +60,10 @@ function App() {
     deleteCategory,
     deleteProduct,
     updateProductPrice,
+    customFigureRows,
+    addCustomFigureRow,
+    updateCustomFigureRow,
+    removeCustomFigureRow,
     updateCurrencyAbbr,
   } = useBalloonCalc();
 
@@ -178,6 +182,10 @@ function App() {
             copyMessage={copyMessage}
             resultCardRef={resultCardRef}
             renderHeader={renderHeader}
+            customFigureRows={customFigureRows}
+            addCustomFigureRow={addCustomFigureRow}
+            updateCustomFigureRow={updateCustomFigureRow}
+            removeCustomFigureRow={removeCustomFigureRow}
           />
         )}
 

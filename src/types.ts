@@ -3,6 +3,7 @@ export type PriceMode = "fixed" | "custom";
 export type Product = {
   id: string;
   name: string;
+  nameMode?: "custom";
   price: number;
   priceMode?: PriceMode;
 };
@@ -41,4 +42,10 @@ export type DraftProduct = {
   name: string;
   price: string;
   priceMode: PriceMode;
+};
+
+export type CustomFigureRow = {
+  id: string;
+  name: string;
+  price: string;
 };

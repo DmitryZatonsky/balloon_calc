@@ -1,6 +1,12 @@
 import { useState } from "react";
 import type { Dispatch, RefObject, SetStateAction } from "react";
-import type { Category, CalculationLine, Product, ResultLanguage } from "../types";
+import type {
+  Category,
+  CalculationLine,
+  CustomFigureRow,
+  Product,
+  ResultLanguage,
+} from "../types";
 import { formatMoney, translateCategoryName, translateProductName } from "../utils";
 import { CategoryIcon } from "./CategoryIcon";
 
@@ -26,6 +32,10 @@ type Props = {
   copyMessage: string;
   resultCardRef: RefObject<HTMLElement | null>;
   renderHeader: (title: string) => React.ReactNode;
+  customFigureRows: CustomFigureRow[];
+  addCustomFigureRow: () => void;
+  updateCustomFigureRow: (id: string, changes: Partial<CustomFigureRow>) => void;
+  removeCustomFigureRow: (id: string) => void;
 };
 
 export function CalcScreen({
@@ -50,6 +60,10 @@ export function CalcScreen({
   copyMessage,
   resultCardRef,
   renderHeader,
+  customFigureRows,
+  addCustomFigureRow,
+  updateCustomFigureRow,
+  removeCustomFigureRow,
 }: Props) {
   const [resultLang, setResultLang] = useState<ResultLanguage>("ru");
 
@@ -81,7 +95,22 @@ export function CalcScreen({
               </button>
 
               <div className={`products ${isOpen ? "is-open" : ""}`} aria-hidden={!isOpen}>
-                {category.items.map((product) => {
+                {category.id === "figures" && isOpen && (
+                  <div className="product-row">
+                    <span>Добавить фигуру</span>
+                    <button
+                      type="button"
+                      className="ui-btn ui-btn--ghost ghost-btn qty-btn"
+                      onClick={addCustomFigureRow}
+                    >
+                      +
+                    </button>
+                  </div>
+                )}
+                {category
+                  .items
+                  .filter((product) => product.id !== "fig-custom")
+                  .map((product) => {
                   const key = buildItemKey(category.id, product.id);
                   const qty = quantities[key] ?? 0;
 
@@ -97,7 +126,7 @@ export function CalcScreen({
                       </div>
 
                       {qty <= 0 ? (
-                        <button className="qty-add" onClick={() => activateItem(category.id, product)}>
+                        <button className="qty-btn" onClick={() => activateItem(category.id, product)}>
                           +
                         </button>
                       ) : (
@@ -137,6 +166,40 @@ export function CalcScreen({
                     </div>
                   );
                 })}
+                {category.id === "figures" && isOpen && (
+                  <div className="product-rows">
+                    {customFigureRows.map((row) => (
+                      <div key={row.id} className="product-row">
+                        <input
+                          className="ui-input custom-product-input"
+                          placeholder="Бетмен"
+                          value={row.name}
+                          onChange={(event) =>
+                            updateCustomFigureRow(row.id, { name: event.target.value })
+                          }
+                        />
+                        <input
+                          className="ui-input custom-amount-input"
+                          placeholder="0"
+                          inputMode="numeric"
+                          value={row.price}
+                          onChange={(event) =>
+                            updateCustomFigureRow(row.id, {
+                              price: keepDigits(event.target.value),
+                            })
+                          }
+                        />
+                        <button
+                          type="button"
+                          className="ui-btn ui-btn--ghost ghost-btn qty-btn"
+                          onClick={() => removeCustomFigureRow(row.id)}
+                        >
+                          -
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </article>
           );

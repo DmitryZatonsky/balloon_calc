@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type {
   Category,
   CalculationLine,
+  CustomFigureRow,
   DraftProduct,
   PriceData,
   Product,
@@ -63,6 +64,7 @@ export function useBalloonCalc() {
   const [openCategoryId, setOpenCategoryId] = useState<string | null>(null);
   const [scrollToResultOnCalcOpen, setScrollToResultOnCalcOpen] = useState<boolean>(false);
   const resultCardRef = useRef<HTMLElement | null>(null);
+  const [customFigureRows, setCustomFigureRows] = useState<CustomFigureRow[]>([]);
 
   function navigateTo(nextScreen: Screen): void {
     setScreenState((current) => {
@@ -282,10 +284,29 @@ export function useBalloonCalc() {
   }
 
   function handleCalculate(): void {
-    const result = calc.handleCalculate(categories);
+    const result = calc.handleCalculate(categories, customFigureRows);
     setSaveMessage("");
     setCopyMessage("");
     setScrollToResultOnCalcOpen(result.lines.length > 0);
+  }
+
+  function addCustomFigureRow(): void {
+    const row: CustomFigureRow = {
+      id: `figure-row-${Date.now()}`,
+      name: "",
+      price: "",
+    };
+    setCustomFigureRows((prev) => [...prev, row]);
+  }
+
+  function updateCustomFigureRow(id: string, changes: Partial<CustomFigureRow>): void {
+    setCustomFigureRows((prev) =>
+      prev.map((row) => (row.id === id ? { ...row, ...changes } : row)),
+    );
+  }
+
+  function removeCustomFigureRow(id: string): void {
+    setCustomFigureRows((prev) => prev.filter((row) => row.id !== id));
   }
 
   function triggerSuccessPulse(): void {
@@ -782,6 +803,10 @@ export function useBalloonCalc() {
     deleteCategory,
     deleteProduct,
     updateProductPrice,
+    customFigureRows,
+    addCustomFigureRow,
+    updateCustomFigureRow,
+    removeCustomFigureRow,
     updateCurrencyAbbr,
   };
 }
